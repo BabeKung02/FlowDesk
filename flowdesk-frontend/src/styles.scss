@@ -1,0 +1,581 @@
+@import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
+
+// ── Global Font & Reset ───────────────────────────────
+* {
+  font-family: 'Prompt', sans-serif !important;
+}
+
+html,
+body {
+  font-family: 'Prompt', sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  color: #111827;
+}
+
+// ── Material Icon Fix (แก้ icon แสดงเป็น text) ────────
+.mat-icon {
+  font-family: 'Material Icons' !important;
+  font-size: 30px !important;
+  width: 30px !important;
+  height: 30px !important;
+  line-height: 30px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+// icon ใน form field ให้เล็กกว่า
+.mat-mdc-form-field-icon-prefix .mat-icon,
+.mat-mdc-form-field-icon-suffix .mat-icon {
+  font-size: 20px !important;
+  width: 20px !important;
+  height: 20px !important;
+  line-height: 20px !important;
+}
+
+// ── CSS Variables (Light Theme Version) ───────────────
+:root {
+  --um-bg: #f6f8fa; // พื้นหลังหลัก (เทาอ่อนมาก)
+  --um-surface: #ffffff; // พื้นหลัง Card/Modal (ขาวบริสุทธิ์)
+  --um-surface-2: #ffffff; // พื้นหลัง Dropdown/Menu
+  --um-border: #d0d7de; // เส้นขอบปกติ
+  --um-border-hover: #afb8c1; // เส้นขอบเมื่อ Hover
+  --um-text-primary: #1f2328; // ตัวอักษรหลัก (เกือบดำ)
+  --um-text-secondary: #57606a; // ตัวอักษรรอง (เทาเข้ม)
+  --um-text-muted: #8c959f; // ตัวอักษรจางๆ
+  --um-accent: #0969da; // สีฟ้าหลัก (ปรับให้เข้มขึ้นเพื่อให้ตัดกับสีขาว)
+  --um-accent-glow: rgba(9, 105, 218, 0.1);
+  --um-success: #1a7f37;
+  --um-danger: #cf222e;
+  --um-pending: #8250df;
+  --um-role-admin: #953800; // ส้มเข้มสำหรับพื้นหลังขาว
+  --um-role-manager: #0969da;
+  --um-role-user: #1a7f37;
+  --um-role-viewer: #57606a;
+}
+
+// ── Dropdown Panel (Light Theme Fix) ─────────────────
+.um-filter-panel {
+  background: #ffffff !important;
+  border: 1px solid #d0d7de !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1) !important;
+  padding: 6px !important;
+
+  .mat-mdc-option {
+    border-radius: 8px !important;
+    margin: 2px 0 !important;
+    min-height: 44px !important;
+
+    .mdc-list-item__primary-text {
+      font-family: 'Prompt', sans-serif !important;
+      width: 100%;
+    }
+
+    &:hover:not(.mdc-list-item--disabled) {
+      background: #f3f4f6 !important;
+    }
+
+    // ซ่อน selected highlight — badge สื่อความหมายแทนอยู่แล้ว
+    &.mdc-list-item--selected {
+      background: #f3f4f6 !important;
+    }
+  }
+
+  // ซ่อน checkmark ของ Material
+  .mat-pseudo-checkbox {
+    display: none !important;
+  }
+}
+
+// Badge pill ภายใน option — เหมือน role badge ในตาราง
+.um-filter-panel .mat-option-inner {
+  display: flex;
+  align-items: center;
+  width: 100%;
+
+  .role-badge-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: 'Prompt', sans-serif !important;
+
+    &[data-role='admin'] {
+      background: rgba(149, 56, 0, 0.1);
+      color: #953800;
+      border: 1px solid rgba(149, 56, 0, 0.2);
+    }
+    &[data-role='manager'] {
+      background: rgba(9, 105, 218, 0.1);
+      color: #0969da;
+      border: 1px solid rgba(9, 105, 218, 0.2);
+    }
+    &[data-role='user'] {
+      background: rgba(26, 127, 55, 0.1);
+      color: #1a7f37;
+      border: 1px solid rgba(26, 127, 55, 0.2);
+    }
+    &[data-role='viewer'] {
+      background: rgba(87, 96, 106, 0.1);
+      color: #57606a;
+      border: 1px solid rgba(87, 96, 106, 0.2);
+    }
+  }
+}
+
+.um-filter-panel .mat-option-inner mat-icon {
+  &[data-role='admin'] {
+    color: var(--um-role-admin) !important;
+  }
+  &[data-role='manager'] {
+    color: var(--um-role-manager) !important;
+  }
+  &[data-role='user'] {
+    color: var(--um-role-user) !important;
+  }
+  &[data-role='viewer'] {
+    color: var(--um-role-viewer) !important;
+  }
+}
+
+// ── Card Menu Panel ───────────────────────────────────
+.um-card-menu-panel {
+  background: var(--um-surface) !important; // ใช้ขาวบริสุทธิ์
+  border: 1px solid var(--um-border) !important;
+  box-shadow: 0 8px 24px rgba(149, 157, 165, 0.2) !important; // เปลี่ยนเงาให้เป็นสีเทา
+
+  .mat-mdc-menu-item {
+    color: var(--um-text-secondary) !important;
+
+    &:hover {
+      background: #f3f4f6 !important; // เปลี่ยนจาก rgba(255,255,255,0.06) เป็นสีเทาอ่อน
+      color: var(--um-text-primary) !important;
+    }
+  }
+}
+
+.um-role-inline-select {
+  appearance: none;
+  -webkit-appearance: none;
+  border-radius: 6px;
+  padding: 5px 28px 5px 10px;
+  font-family: 'Prompt', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  border: 1px solid;
+  transition: all 0.15s;
+
+  // background arrow
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%238c959f' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+
+  // สี ตาม role ที่เลือกอยู่
+  &[data-role='admin'] {
+    background-color: rgba(149, 56, 0, 0.1);
+    color: #953800;
+    border-color: rgba(149, 56, 0, 0.25);
+  }
+  &[data-role='manager'] {
+    background-color: rgba(9, 105, 218, 0.1);
+    color: #0969da;
+    border-color: rgba(9, 105, 218, 0.25);
+  }
+  &[data-role='user'] {
+    background-color: rgba(26, 127, 55, 0.1);
+    color: #1a7f37;
+    border-color: rgba(26, 127, 55, 0.25);
+  }
+  &[data-role='viewer'] {
+    background-color: rgba(87, 96, 106, 0.1);
+    color: #57606a;
+    border-color: rgba(87, 96, 106, 0.2);
+  }
+
+  option {
+    background: #ffffff;
+    color: #1f2328;
+    font-weight: 500;
+  }
+}
+
+.um-role-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.um-role-badge--btn {
+  background: none;
+  cursor: pointer;
+  font-family: 'Prompt', sans-serif;
+
+  .chevron {
+    font-size: 14px !important;
+    width: 14px !important;
+    height: 14px !important;
+    margin-left: 2px;
+    opacity: 0.5;
+    transition: transform 0.15s;
+  }
+}
+
+.um-role-dropdown.open .chevron {
+  transform: rotate(180deg);
+}
+
+.um-role-dropdown-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 200;
+  background: #ffffff;
+  border: 1px solid #d0d7de;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+  padding: 5px;
+  min-width: 150px;
+  animation: fadeIn 0.12s ease;
+}
+
+.um-role-dropdown-option {
+  display: flex;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 4px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.1s;
+
+  &:hover { background: #f3f4f6; }
+
+  &.selected .role-badge-pill {
+    opacity: 1;
+    outline: 2px solid currentColor;
+    outline-offset: 1px;
+  }
+}
+
+.role-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'Prompt', sans-serif;
+  width: 100%;
+
+  mat-icon {
+    font-size: 20px !important;
+    width: 20px !important;
+    height: 20px !important;
+  }
+
+  &[data-role='admin']   { background: rgba(149,56,0,0.1);   color: #953800; border: 1px solid rgba(149,56,0,0.2); }
+  &[data-role='manager'] { background: rgba(9,105,218,0.1);  color: #0969da; border: 1px solid rgba(9,105,218,0.2); }
+  &[data-role='user']    { background: rgba(26,127,55,0.1);  color: #1a7f37; border: 1px solid rgba(26,127,55,0.2); }
+  &[data-role='viewer']  { background: rgba(87,96,106,0.1);  color: #57606a; border: 1px solid rgba(87,96,106,0.2); }
+}
+
+// ── SweetAlert2 Dark Theme ────────────────────────────
+.swal-um-popup {
+  background: var(--um-surface) !important;
+  border: 1px solid var(--um-border) !important; // เปลี่ยนจากสีขาวจางๆ 0.1
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.1) !important; // ลดความเข้มของเงาลง
+}
+
+.swal-um-title {
+  color: var(--um-text-primary) !important;
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  padding: 24px 24px 0 !important;
+}
+
+.swal-um-html {
+  color: var(--um-text-secondary) !important;
+  margin: 0 !important;
+  padding: 0 24px !important;
+  text-align: left !important;
+}
+
+.swal2-actions {
+  padding: 0 24px 24px !important;
+  gap: 10px !important;
+}
+
+%swal-btn-base {
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  padding: 10px 20px !important;
+  border: none !important;
+}
+
+.swal-um-confirm,
+.swal-um-cancel,
+button {
+  &:hover {
+    background-color: #f3f4f6 !important; // กำหนดสีเทาอ่อนไปเลย
+    color: var(--um-text-primary) !important;
+  }
+}
+
+// ถ้าเป็นปุ่มกากบาทปิด (Close Button)
+.swal2-close:hover {
+  background: #f3f4f6 !important;
+  color: #1f2328 !important;
+}
+
+.swal-um-confirm-danger {
+  @extend %swal-btn-base;
+  background: rgba(248, 81, 73, 0.15) !important;
+  color: var(--um-danger) !important;
+  border: 1px solid rgba(248, 81, 73, 0.35) !important;
+  &:hover {
+    background: var(--um-danger) !important;
+    color: #fff !important;
+    border-color: var(--um-danger) !important;
+  }
+}
+
+.swal-um-cancel {
+  @extend %swal-btn-base;
+  background: var(--um-surface-2) !important;
+  color: var(--um-text-secondary) !important;
+  border: 1px solid var(--um-border) !important;
+  &:hover {
+    border-color: var(--um-border-hover) !important;
+    color: var(--um-text-primary) !important;
+  }
+}
+
+// ── SweetAlert2 Form Components ───────────────────────
+.swal-um-user-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 0 20px;
+  border-bottom: 1px solid var(--um-border);
+  margin-bottom: 20px;
+}
+
+.swal-um-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 16px;
+  color: #fff;
+  flex-shrink: 0;
+
+  &.sm {
+    width: 36px;
+    height: 36px;
+    font-size: 13px;
+  }
+}
+
+.swal-um-user-id {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 12px;
+  color: var(--um-text-muted);
+}
+
+.swal-um-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-bottom: 4px;
+}
+
+.swal-um-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.swal-um-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--um-text-secondary);
+    letter-spacing: 0.3px;
+  }
+}
+
+%swal-input-base {
+  width: 100%;
+  background: var(--um-bg);
+  border: 1px solid var(--um-border);
+  border-radius: 8px;
+  padding: 9px 12px;
+  color: var(--um-text-primary);
+  font-size: 14px;
+  outline: none;
+  box-sizing: border-box;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+
+  &::placeholder {
+    color: var(--um-text-muted);
+  }
+  &:focus {
+    border-color: var(--um-accent);
+    box-shadow: 0 0 0 3px var(--um-accent-glow);
+  }
+}
+
+.swal-um-input {
+  @extend %swal-input-base;
+}
+
+.swal-um-select {
+  @extend %swal-input-base;
+  cursor: pointer;
+  appearance: none;
+  option {
+    background: var(--um-surface-2);
+  }
+}
+
+.swal-um-delete-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--um-bg);
+  border: 1px solid var(--um-border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin: 16px 0 12px;
+}
+
+.swal-um-delete-name {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--um-text-primary);
+}
+.swal-um-delete-email {
+  font-size: 12px;
+  color: var(--um-text-muted);
+  font-family: 'JetBrains Mono', monospace !important;
+}
+
+.swal-um-delete-warn {
+  color: var(--um-text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 0 0 8px;
+  strong {
+    color: var(--um-text-primary);
+  }
+}
+
+.swal2-validation-message {
+  background: rgba(248, 81, 73, 0.1) !important;
+  color: var(--um-danger) !important;
+  border: none !important;
+  border-radius: 8px !important;
+  font-size: 13px !important;
+  margin: 8px 0 0 !important;
+}
+
+// ── Layout User Menu ──────────────────────────────────
+.layout-user-menu {
+  --mat-menu-container-color: #ffffff;
+  --mat-menu-item-label-text-color: #1f2328;
+  --mat-menu-item-icon-color: #57606a;
+  --mat-menu-item-hover-state-layer-color: rgba(0, 0, 0, 0.04); // สีดำจางๆ เวลา hover
+  --mat-menu-divider-color: #d0d7de;
+  --mat-menu-container-elevation-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.cdk-overlay-container .layout-user-menu {
+  .mat-mdc-menu-panel {
+    background-color: #ffffff !important;
+    border: 1px solid #d0d7de !important;
+  }
+
+  .mat-mdc-menu-item {
+    .mdc-list-item__primary-text {
+      color: #1f2328 !important;
+    }
+    .mat-icon {
+      color: #57606a !important;
+    }
+
+    &:hover {
+      background-color: #f3f4f6 !important;
+    }
+  }
+}
+
+.cdk-overlay-container .layout-user-menu {
+  .mat-mdc-menu-panel {
+    // background-color: #1e293b !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5) !important;
+    min-width: 180px !important;
+  }
+
+  .mat-mdc-menu-content {
+    background-color: #1e293b !important;
+    padding: 6px !important;
+  }
+
+  .mat-mdc-menu-item {
+    border-radius: 7px !important;
+
+    .mdc-list-item__primary-text {
+      color: rgba(255, 255, 255, 0.8) !important;
+    }
+    .mat-icon {
+      color: rgba(255, 255, 255, 0.45) !important;
+    }
+
+    &:hover {
+      .mdc-list-item__primary-text {
+        color: #ffffff !important;
+      }
+      .mat-icon {
+        color: rgba(255, 255, 255, 0.85) !important;
+      }
+    }
+  }
+
+  .mat-mdc-menu-item.menu-item-logout {
+    .mdc-list-item__primary-text,
+    .mat-icon {
+      color: #f87171 !important;
+    }
+    &:hover {
+      background-color: rgba(248, 113, 113, 0.08) !important;
+    }
+  }
+
+  .mat-divider {
+    border-top-color: rgba(255, 255, 255, 0.08) !important;
+  }
+}
+
+// ── mat-toolbar Reset ─────────────────────────────────
+.mat-toolbar {
+  padding: 0 !important;
+}

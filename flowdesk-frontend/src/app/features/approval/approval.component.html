@@ -1,0 +1,231 @@
+<div class="page-container">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <span class="page-eyebrow">Workflow</span>
+      <h1 class="page-title">Approvals</h1>
+      <p class="page-subtitle">Review and action pending approval requests</p>
+    </div>
+    <div class="header-right">
+      <div class="view-toggle">
+        <button class="view-btn" [class.active]="viewMode === 'pending'" (click)="viewMode = 'pending'">
+          <mat-icon>pending_actions</mat-icon>
+          Pending
+          <span class="toggle-badge" *ngIf="pendingApprovals.length > 0">{{ pendingApprovals.length }}</span>
+        </button>
+        <button class="view-btn" [class.active]="viewMode === 'history'" (click)="viewMode = 'history'">
+          <mat-icon>history</mat-icon>
+          History
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card" *ngFor="let stat of stats" [style.--card-color]="stat.color">
+      <div class="stat-icon" [style.background-color]="stat.bgColor">
+        <mat-icon [style.color]="stat.color">{{ stat.icon }}</mat-icon>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value">{{ stat.value }}</div>
+        <div class="stat-title">{{ stat.title }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PENDING VIEW -->
+  <div *ngIf="viewMode === 'pending'">
+
+    <div class="summary-banner" *ngIf="pendingApprovals.length > 0">
+      <mat-icon>info</mat-icon>
+      <span>You have <strong>{{ pendingApprovals.length }}</strong> request{{ pendingApprovals.length > 1 ? 's' : '' }} awaiting your approval</span>
+      <div class="banner-actions">
+        <button class="btn-approve-all" (click)="approveAll()">
+          <mat-icon>done_all</mat-icon>
+          Approve All
+        </button>
+      </div>
+    </div>
+
+    <div class="approvals-list" *ngIf="pendingApprovals.length > 0">
+      <div class="approval-card" *ngFor="let item of pendingApprovals"
+           [class.card-high]="item.priority === 'high'"
+           [class.card-processing]="processingId === item.id">
+
+        <div class="card-top">
+          <div class="card-meta">
+            <span class="req-id">{{ item.id }}</span>
+            <span class="type-chip">{{ item.requestType }}</span>
+            <span class="priority-badge" [class]="'priority-' + item.priority">
+              <mat-icon>flag</mat-icon>{{ item.priority | titlecase }}
+            </span>
+          </div>
+          <div class="waiting-info" [class.overdue-wrap]="getDaysWaiting(item.submittedDate) >= 3">
+            <mat-icon>schedule</mat-icon>
+            <span>{{ getDaysWaiting(item.submittedDate) === 0 ? 'Submitted today' : getDaysWaiting(item.submittedDate) + ' day' + (getDaysWaiting(item.submittedDate) > 1 ? 's' : '') + ' waiting' }}</span>
+          </div>
+        </div>
+
+        <h3 class="card-title">{{ item.title }}</h3>
+        <p class="card-description" *ngIf="item.description">{{ item.description }}</p>
+
+        <div class="requester-row">
+          <div class="requester-info">
+            <div class="avatar">{{ item.requester?.charAt(0) }}</div>
+            <div>
+              <div class="requester-name">{{ item.requester }}</div>
+              <div class="requester-dept">{{ item.department }}</div>
+            </div>
+          </div>
+          <div class="submitted-date">
+            <mat-icon>calendar_today</mat-icon>
+            {{ item.submittedDate | date:'dd MMM yyyy, HH:mm' }}
+          </div>
+        </div>
+
+        <div class="workflow-section">
+          <div class="workflow-header">
+            <span class="workflow-label">Approval Flow</span>
+            <span class="current-step">{{ item.currentStep }}</span>
+          </div>
+          <div class="workflow-steps">
+            <div class="step" *ngFor="let step of item.workflow; let i = index; let last = last"
+                 [class.step-completed]="step.status === 'completed'"
+                 [class.step-active]="step.status === 'in-progress' || (step.status === 'pending' && i === getActiveStepIndex(item))"
+                 [class.step-rejected]="step.status === 'rejected'">
+              <div class="step-dot">
+                <mat-icon *ngIf="step.status === 'completed'">check</mat-icon>
+                <mat-icon *ngIf="step.status === 'in-progress'">sync</mat-icon>
+                <mat-icon *ngIf="step.status === 'rejected'">close</mat-icon>
+                <span *ngIf="step.status === 'pending'">{{ i + 1 }}</span>
+              </div>
+              <span class="step-name">{{ step.name }}</span>
+              <div class="step-line" *ngIf="!last"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Simple action buttons — SweetAlert2 handles confirm -->
+        <div class="card-actions">
+          <button class="btn-detail" (click)="viewRequestDetail(item)">
+            <mat-icon>visibility</mat-icon>
+            View Details
+          </button>
+          <div class="action-buttons">
+            <button class="btn-reject" (click)="rejectRequest(item)" [disabled]="processingId === item.id">
+              <mat-icon>close</mat-icon>
+              Reject
+            </button>
+            <button class="btn-approve" (click)="approveRequest(item)" [disabled]="processingId === item.id">
+              <mat-icon>check</mat-icon>
+              Approve
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="empty-card" *ngIf="pendingApprovals.length === 0">
+      <div class="empty-state">
+        <div class="empty-icon"><mat-icon>check_circle</mat-icon></div>
+        <h3>All caught up! 🎉</h3>
+        <p>You have no pending approvals at this time</p>
+        <button class="btn-view-history" (click)="viewMode = 'history'">
+          <mat-icon>history</mat-icon> View History
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- HISTORY VIEW -->
+  <div *ngIf="viewMode === 'history'">
+
+    <div class="toolbar-row">
+      <div class="search-wrap">
+        <mat-icon class="search-icon">search</mat-icon>
+        <input class="search-input" type="text" placeholder="Search ID, title, requester..."
+               [(ngModel)]="historySearch" (ngModelChange)="filterHistory()" />
+        <button class="search-clear" *ngIf="historySearch" (click)="historySearch = ''; filterHistory()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+      <div class="filter-selects">
+        <div class="select-wrap">
+          <label>Action</label>
+          <select [(ngModel)]="historyFilter" (ngModelChange)="filterHistory()">
+            <option value="all">All Actions</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <div class="table-header-row">
+        <span class="result-count"><strong>{{ filteredHistory.length }}</strong> records found</span>
+      </div>
+      <div class="table-scroll">
+        <table mat-table [dataSource]="filteredHistory" class="history-table">
+
+          <ng-container matColumnDef="id">
+            <th mat-header-cell *matHeaderCellDef>Request ID</th>
+            <td mat-cell *matCellDef="let row"><span class="req-id-link">{{ row.id }}</span></td>
+          </ng-container>
+
+          <ng-container matColumnDef="title">
+            <th mat-header-cell *matHeaderCellDef>Title</th>
+            <td mat-cell *matCellDef="let row">
+              <div class="cell-title">{{ row.title }}</div>
+              <div class="cell-sub">{{ row.department }}</div>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="requester">
+            <th mat-header-cell *matHeaderCellDef>Requester</th>
+            <td mat-cell *matCellDef="let row">
+              <div class="requester-cell">
+                <div class="avatar-sm">{{ row.requester?.charAt(0) }}</div>
+                <span>{{ row.requester }}</span>
+              </div>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="action">
+            <th mat-header-cell *matHeaderCellDef>Action</th>
+            <td mat-cell *matCellDef="let row">
+              <span class="action-badge" [class]="'action-' + row.actionTaken">
+                <mat-icon>{{ row.actionTaken === 'approved' ? 'check_circle' : 'cancel' }}</mat-icon>
+                {{ row.actionTaken | titlecase }}
+              </span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="comment">
+            <th mat-header-cell *matHeaderCellDef>Comment</th>
+            <td mat-cell *matCellDef="let row"><span class="comment-text">{{ row.comment || '—' }}</span></td>
+          </ng-container>
+
+          <ng-container matColumnDef="actionDate">
+            <th mat-header-cell *matHeaderCellDef>Actioned On</th>
+            <td mat-cell *matCellDef="let row"><span class="date-text">{{ row.actionDate | date:'dd MMM yyyy' }}</span></td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="historyColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: historyColumns;" class="history-row"></tr>
+          <tr class="mat-row" *matNoDataRow>
+            <td class="mat-cell" [attr.colspan]="historyColumns.length">
+              <div class="empty-state-sm"><mat-icon>history</mat-icon><p>No history found</p></div>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+</div>

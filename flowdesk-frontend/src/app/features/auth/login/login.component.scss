@@ -1,0 +1,387 @@
+// ── Variables ─────────────────────────────────────────
+$primary: #6366f1;
+$primary-dark: #4f46e5;
+$error: #ef4444;
+$white: #ffffff;
+$gray-50: #f9fafb;
+$gray-400: #9ca3af;
+$gray-600: #4b5563;
+$gray-700: #374151;
+$indigo-800: #3730a3;
+
+$gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+$gradient-hover: linear-gradient(135deg, #5568d3 0%, #6a3e8f 100%);
+$radius-card: 1.5rem;
+$radius-field: 0.75rem;
+$shadow-card:
+  0 20px 25px -5px rgba(0, 0, 0, 0.1),
+  0 10px 10px -5px rgba(0, 0, 0, 0.04);
+$shadow-btn:
+  0 10px 15px -3px rgba(102, 126, 234, 0.4),
+  0 4px 6px -2px rgba(102, 126, 234, 0.05);
+$shadow-btn-hover:
+  0 20px 25px -5px rgba(102, 126, 234, 0.5),
+  0 10px 10px -5px rgba(102, 126, 234, 0.1);
+
+// ── Animations ────────────────────────────────────────
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// ── Layout ────────────────────────────────────────────
+.login-container {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: $gradient;
+  padding: 1rem;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 20% 80%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 50%);
+    animation: pulse 8s ease-in-out infinite;
+  }
+}
+
+// ── Card ──────────────────────────────────────────────
+.login-card {
+  width: 100%;
+  max-width: 26rem;
+  border-radius: $radius-card;
+  border: none;
+  background: $white;
+  position: relative;
+  z-index: 1;
+  animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: $shadow-card;
+  transform-origin: center;
+  transform: scale(0.85);
+  margin-top: -40px;
+}
+
+// ── Header ────────────────────────────────────────────
+.login-header {
+  background: $gradient;
+  padding: 2.2rem 1.75rem 1.75rem;
+  text-align: center;
+  position: relative;
+  border-radius: $radius-card $radius-card 0 0;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    animation: rotate 20s linear infinite;
+  }
+
+  .login-title {
+    font-size: 2rem; // ← ขนาดเดิม
+    font-weight: 700;
+    color: $white;
+    margin: 0 0 0.5rem;
+    position: relative;
+    z-index: 1;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .login-subtitle {
+    font-size: 1.1rem; // ← เพิ่มจาก 0.9rem
+    color: rgba(255, 255, 255, 0.9);
+    position: relative;
+    z-index: 1;
+    line-height: 1.6;
+  }
+}
+
+// ── Body ──────────────────────────────────────────────
+.login-body {
+  padding: 2.5rem 2rem 2rem;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+
+  .form-field-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    width: 100%;
+
+    .field-label {
+      font-size: 1rem; // ← เพิ่มจาก 0.875rem
+      font-weight: 600;
+      color: $gray-700;
+    }
+  }
+
+  // ── Material Field ───────────────────────────────
+  ::ng-deep .mat-mdc-form-field {
+    width: 100%;
+
+    .mat-mdc-text-field-wrapper,
+    .mat-mdc-form-field-focus-overlay {
+      background-color: transparent;
+    }
+
+    .mat-mdc-form-field-infix {
+      padding-top: 1rem;
+      padding-bottom: 1rem;
+      min-height: 56px;
+      padding-left: 0.5rem;
+    }
+
+    .mat-mdc-floating-label {
+      display: none !important;
+    }
+
+    .mat-mdc-input-element {
+      font-size: 1rem; // ← เพิ่มจาก 0.95rem
+      padding-left: 0.5rem;
+
+      &::placeholder {
+        color: $gray-400;
+        opacity: 1;
+        font-size: 0.95rem;
+      }
+    }
+
+    .mat-icon {
+      color: $gray-400;
+      margin-right: 0.75rem;
+    }
+
+    .mat-mdc-form-field-icon-prefix {
+      padding-right: 0.5rem;
+    }
+
+    // ── Outline ──────────────────────────────────────
+    .mdc-text-field--outlined {
+      background-color: $gray-50;
+      border-radius: 1rem;
+
+      &:not(.mdc-text-field--disabled) {
+        .mdc-notched-outline__leading {
+          border-radius: 1rem 0 0 1rem !important;
+          min-width: 1rem !important;
+        }
+        .mdc-notched-outline__notch {
+          border-right: none !important;
+          border-left: none !important;
+        }
+        .mdc-notched-outline__trailing {
+          border-radius: 0 1rem 1rem 0 !important;
+        }
+        .mdc-notched-outline__leading,
+        .mdc-notched-outline__notch,
+        .mdc-notched-outline__trailing {
+          border-color: #e5e7eb !important;
+          border-width: 1px !important;
+        }
+
+        &:hover {
+          .mdc-notched-outline__leading,
+          .mdc-notched-outline__notch,
+          .mdc-notched-outline__trailing {
+            border-color: #c7d2fe !important;
+          }
+        }
+      }
+
+      &.mdc-text-field--focused:not(.mdc-text-field--disabled) {
+        .mdc-notched-outline__leading,
+        .mdc-notched-outline__notch,
+        .mdc-notched-outline__trailing {
+          border-color: $primary !important;
+          border-width: 2px !important;
+        }
+      }
+    }
+    // ── Error ──────────────────────────────────────
+    .mat-mdc-form-field-error {
+      color: $error !important;
+      font-size: 0.9rem; // ← เพิ่มจาก 0.813rem
+      font-weight: 500;
+      margin-top: 0.25rem;
+    }
+
+    .mat-mdc-form-field-subscript-wrapper {
+      min-height: 1.5rem;
+    }
+  }
+}
+
+// ── Forgot Password ───────────────────────────────────
+.forgot-password-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -0.5rem;
+
+  .forgot-link {
+    font-size: 1.05rem; // ← เพิ่มจาก 0.875rem
+    font-weight: 600;
+    color: $primary; // ← ใช้ตัวแปรแทน hardcode
+    text-decoration: none !important; // ← ลบขีดเส้นใต้
+    transition: color 0.2s ease;
+
+    &:hover {
+      color: $indigo-800;
+    }
+  }
+}
+
+// ── Login Button ──────────────────────────────────────
+.login-button {
+  width: 100%;
+  height: 3rem; // ← เพิ่มจาก 2.75rem
+  font-size: 1.05rem; // ← เพิ่มจาก 0.95rem
+  font-weight: 600;
+  color: $white !important; // ← บังคับ white เสมอ
+  border: none;
+  border-radius: $radius-field;
+  background: $gradient;
+  box-shadow: $shadow-btn;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  cursor: pointer;
+
+  // บังคับ text สีขาวแม้ใน Material
+  span,
+  ::ng-deep .mdc-button__label {
+    color: $white !important;
+  }
+
+  &:hover:not(:disabled) {
+    background: $gradient-hover;
+    transform: translateY(-2px);
+    box-shadow: $shadow-btn-hover;
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .button-icon {
+    font-size: 1.1rem;
+    width: 1.1rem;
+    height: 1.1rem;
+    transition: transform 0.3s ease;
+    color: $white;
+  }
+
+  &:hover .button-icon {
+    transform: translateX(4px);
+  }
+
+  ::ng-deep mat-spinner {
+    circle {
+      stroke: $white;
+    }
+  }
+}
+
+// ── Signup Link ───────────────────────────────────────
+.signup-link {
+  text-align: center;
+  font-size: 1.05rem;
+  color: $gray-600;
+  margin-top: 1.5rem;
+
+  .signup-text {
+    color: $primary;
+    font-weight: 600;
+    text-decoration: none;
+    margin-left: 0.25rem;
+    transition: color 0.2s ease;
+
+    &:hover {
+      color: $indigo-800;
+    }
+  }
+}
+
+// ── Material Button Reset ─────────────────────────────
+::ng-deep .login-button.mat-mdc-raised-button {
+  &.mat-primary {
+    --mdc-protected-button-container-color: transparent;
+    --mdc-protected-button-label-text-color: #{$white};
+  }
+}
+
+// ── Responsive ────────────────────────────────────────
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  .login-container {
+    padding: 2rem 1.5rem 4rem;
+  }
+
+  .login-card {
+    max-width: 24rem;
+    transform: scale(1);
+    position: absolute;
+    top: 80px;
+  }
+}
+
+@media (max-width: 640px) {
+  .login-container {
+    padding: 0.5rem;
+  }
+
+  .login-card {
+    position: absolute;
+    top: 30px;
+  }
+
+  .login-header {
+    padding: 2rem 1.5rem 1.5rem;
+    .login-title {
+      font-size: 1.75rem;
+    }
+    .login-subtitle {
+      font-size: 1rem;
+    }
+  }
+
+  .login-body {
+    padding: 2rem 1.5rem 1.5rem;
+  }
+
+  .login-button {
+    height: 2.75rem;
+  }
+}

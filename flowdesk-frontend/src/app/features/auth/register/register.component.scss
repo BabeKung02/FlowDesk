@@ -1,0 +1,403 @@
+// ── Variables ─────────────────────────────────────────
+$primary: #6366f1;
+$primary-dark: #4f46e5;
+$success: #10b981;
+$success-dark: #059669;
+$error: #ef4444;
+$white: #ffffff;
+$gray-50: #f9fafb;
+$gray-400: #9ca3af;
+$gray-600: #4b5563;
+$gray-700: #374151;
+$indigo-800: #3730a3;
+
+$gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+$gradient-hover: linear-gradient(135deg, #5568d3 0%, #6a3e8f 100%);
+$gradient-success: linear-gradient(135deg, $success 0%, $success-dark 100%);
+
+$shadow-button:
+  0 10px 15px -3px rgba(102, 126, 234, 0.4),
+  0 4px 6px -2px rgba(102, 126, 234, 0.05);
+$shadow-button-hover:
+  0 20px 25px -5px rgba(102, 126, 234, 0.5),
+  0 10px 10px -5px rgba(102, 126, 234, 0.1);
+
+// ─── ลด radius ให้เล็กลงนิดนึงเพื่อชดเชย font ที่เล็กลง
+$radius-card: 1.25rem;
+$radius-field: 0.65rem;
+
+// ── Animations ────────────────────────────────────────
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// ── Layout ────────────────────────────────────────────
+
+.register-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  background: $gradient;
+  padding: 2rem 1rem 3rem;
+  position: relative;
+  box-sizing: border-box;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 20% 80%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 50%);
+    animation: pulse 8s ease-in-out infinite;
+    pointer-events: none;
+  }
+}
+
+// ── Card ──────────────────────────────────────────────
+
+.register-card {
+  width: 100%;
+  max-width: 26rem;
+  border-radius: $radius-card;
+  overflow: hidden;
+  border: none;
+  background: $white;
+  position: relative;
+  z-index: 1;
+  animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.2),
+    0 8px 16px rgba(0, 0, 0, 0.1);
+  transform: scale(0.85);
+  margin-top: -50px;
+}
+
+// ── Header ────────────────────────────────────────────
+.header {
+  background: $gradient;
+  padding: 2.2rem 1.5rem 1.5rem;
+  text-align: center;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    animation: rotate 20s linear infinite;
+  }
+
+  .title {
+    font-size: 1.375rem; // ← ลดจาก 2rem → พอดีกับ card ขนาดใหม่
+    font-weight: 700;
+    color: $white;
+    margin-bottom: 0.25rem;
+    position: relative;
+    z-index: 1;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+}
+
+// ── Form ──────────────────────────────────────────────
+.form-container .register-form {
+  padding: 1.5rem 1.5rem 1.25rem; // ← ลด padding ลงจาก 2.5rem
+}
+
+.register-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0; // gap ถูกควบคุมผ่าน mat-form-field margin แทน
+
+  ::ng-deep .mat-mdc-form-field {
+    width: 100%;
+    margin-bottom: 0.75rem; // ← ลดจาก 1rem
+
+    .mat-mdc-text-field-wrapper,
+    .mat-mdc-form-field-focus-overlay {
+      background-color: transparent;
+    }
+
+    .mdc-text-field--outlined {
+      background-color: $gray-50;
+      border-radius: 0.75rem; // ← ลดจาก 1rem
+
+      &:not(.mdc-text-field--disabled) {
+        .mdc-notched-outline__leading {
+          border-radius: 0.75rem 0 0 0.75rem !important;
+          min-width: 0.75rem !important;
+        }
+        .mdc-notched-outline__notch {
+          border-right: none !important;
+          border-left: none !important;
+        }
+        .mdc-notched-outline__trailing {
+          border-radius: 0 0.75rem 0.75rem 0 !important;
+        }
+        .mdc-notched-outline__leading,
+        .mdc-notched-outline__notch,
+        .mdc-notched-outline__trailing {
+          border-color: #e5e7eb !important;
+          border-width: 1px !important;
+        }
+        &:hover {
+          .mdc-notched-outline__leading,
+          .mdc-notched-outline__notch,
+          .mdc-notched-outline__trailing {
+            border-color: #c7d2fe !important;
+          }
+        }
+      }
+
+      &.mdc-text-field--focused:not(.mdc-text-field--disabled) {
+        .mdc-notched-outline__leading,
+        .mdc-notched-outline__notch,
+        .mdc-notched-outline__trailing {
+          border-color: $primary !important;
+          border-width: 2px !important;
+        }
+      }
+    }
+
+    // ── ลด infix padding ให้ input เตี้ยลง ──────────
+    .mat-mdc-form-field-infix {
+      padding-top: 10px !important;
+      padding-bottom: 10px !important;
+      min-height: unset !important;
+    }
+
+    .mat-icon {
+      color: $gray-400;
+      margin-right: 0.5rem;
+      font-size: 18px !important;
+      width: 18px !important;
+      height: 18px !important;
+    }
+
+    .mat-mdc-input-element {
+      font-size: 0.875rem; // ← ลดจาก 0.95rem
+      &::placeholder {
+        color: $gray-400;
+        opacity: 1;
+      }
+    }
+
+    &.mat-form-field-invalid .mdc-text-field--outlined:not(.mdc-text-field--disabled) {
+      .mdc-notched-outline__leading,
+      .mdc-notched-outline__notch,
+      .mdc-notched-outline__trailing {
+        border-color: $error !important;
+      }
+    }
+
+    .mat-mdc-form-field-error {
+      color: $error;
+      font-size: 0.75rem;
+      font-weight: 500;
+      margin-top: 0.125rem;
+    }
+  }
+
+  .password-toggle {
+    color: $gray-400;
+    transition: color 0.2s ease;
+    &:hover {
+      color: $gray-600;
+    }
+  }
+}
+
+// ── Error Banner ──────────────────────────────────────
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background-color: #fee2e2;
+  border-left: 4px solid $error;
+  border-radius: 0.5rem;
+  color: $error;
+  font-size: 0.813rem;
+  font-weight: 500;
+  margin-bottom: 0.75rem;
+
+  mat-icon {
+    font-size: 1rem !important;
+    width: 1rem !important;
+    height: 1rem !important;
+    flex-shrink: 0;
+  }
+}
+
+// ── Button ────────────────────────────────────────────
+%btn-primary {
+  width: 100%;
+  height: 2.5rem; // ← ลดจาก 2.75rem
+  font-size: 0.875rem; // ← ลดจาก 0.95rem
+  font-weight: 600;
+  color: $white;
+  border: none;
+  border-radius: $radius-field;
+  background: $gradient;
+  box-shadow: $shadow-button;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: $gradient-hover;
+    transform: translateY(-2px);
+    box-shadow: $shadow-button-hover;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  ::ng-deep mat-spinner {
+    margin: 0 auto;
+    circle {
+      stroke: $white;
+    }
+  }
+}
+
+.submit-button {
+  @extend %btn-primary;
+  margin-top: 0.25rem;
+}
+
+// ── Login Link ────────────────────────────────────────
+.login-link {
+  text-align: center;
+  padding: 0.75rem 1.5rem 1.5rem; // ← ลด padding
+  font-size: 0.875rem; // ← ลดจาก 1rem
+  color: $gray-600;
+
+  a {
+    color: $primary;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 0.2s ease;
+    &:hover {
+      color: $indigo-800;
+      text-decoration: underline;
+    }
+  }
+}
+
+// ── Success ───────────────────────────────────────────
+.success-container {
+  padding: 2rem 1.5rem;
+  text-align: center;
+
+  .success-icon {
+    width: 4rem;
+    height: 4rem;
+    background: $gradient-success;
+    border-radius: 50%;
+    margin: 0 auto 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+
+    mat-icon {
+      font-size: 2rem !important;
+      width: 2rem !important;
+      height: 2rem !important;
+      color: $white;
+    }
+  }
+
+  .success-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: $gray-700;
+    margin-bottom: 0.75rem;
+  }
+
+  .success-message {
+    font-size: 0.875rem;
+    color: $gray-600;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+  }
+
+  .action-button {
+    @extend %btn-primary;
+  }
+}
+
+// ── Responsive ────────────────────────────────────────
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  .register-container {
+    padding: 2rem 1.5rem 4rem;
+  }
+
+  .register-card {
+    max-width: 24rem;
+    transform: scale(1);
+    margin-top: 5px;
+  }
+}
+
+// Desktop
+@media (min-width: 1025px) {
+  .register-container {
+    align-items: center;
+    padding: 2rem;
+  }
+}
+
+// Mobile
+@media (max-width: 767px) {
+  .register-container {
+    padding: 1.5rem 1rem 2.5rem;
+  }
+
+  .register-card {
+    max-width: 100%;
+    transform: scale(0.9);
+    margin-top: -15px;
+  }
+
+  .header {
+    padding: 1.5rem 1.25rem 1.25rem;
+    .title {
+      font-size: 1.25rem;
+    }
+  }
+
+  .form-container .register-form {
+    padding: 1.25rem 1.25rem 1rem;
+  }
+}
+
+// ── Material Button Reset ─────────────────────────────
+::ng-deep .submit-button.mat-mdc-raised-button,
+::ng-deep .action-button.mat-mdc-raised-button {
+  &.mat-primary {
+    --mdc-protected-button-container-color: transparent;
+    --mdc-protected-button-label-text-color: #{$white};
+  }
+}

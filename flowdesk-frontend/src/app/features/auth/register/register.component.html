@@ -1,0 +1,166 @@
+<!-- register.component.html -->
+<div class="register-container">
+  <mat-card class="register-card">
+
+    <!-- Header -->
+    <div class="header">
+      <h1 class="title">สร้างบัญชีผู้ใช้</h1>
+    </div>
+
+    <!-- Form -->
+    <div class="form-container" *ngIf="!isSuccess">
+      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="register-form">
+
+        <!-- Error Banner -->
+        <div class="error-message" *ngIf="errorMessage">
+          <mat-icon>error_outline</mat-icon>
+          <span>{{ errorMessage }}</span>
+        </div>
+
+          <!-- First Name -->
+          <mat-form-field appearance="outline">
+            <mat-icon matPrefix>person</mat-icon>
+            <input
+              matInput
+              type="text"
+              placeholder="ชื่อ"
+              formControlName="firstName"
+              autocomplete="given-name"
+            />
+            <mat-error *ngIf="registerForm.get('firstName')?.hasError('required')">
+              กรุณากรอกชื่อจริง
+            </mat-error>
+            <mat-error *ngIf="registerForm.get('firstName')?.hasError('minlength')">
+              ชื่อจริงต้องมีอย่างน้อย 2 ตัวอักษร
+            </mat-error>
+          </mat-form-field>
+
+          <!-- Last Name -->
+          <mat-form-field appearance="outline">
+            <mat-icon matPrefix>person_outline</mat-icon>
+            <input
+              matInput
+              type="text"
+              placeholder="นามสกุล"
+              formControlName="lastName"
+              autocomplete="family-name"
+            />
+            <mat-error *ngIf="registerForm.get('lastName')?.hasError('required')">
+              กรุณากรอกนามสกุล
+            </mat-error>
+            <mat-error *ngIf="registerForm.get('lastName')?.hasError('minlength')">
+              นามสกุลต้องมีอย่างน้อย 2 ตัวอักษร
+            </mat-error>
+          </mat-form-field>
+
+        <!-- Email -->
+        <mat-form-field appearance="outline">
+          <mat-icon matPrefix>email</mat-icon>
+          <input
+            matInput
+            type="email"
+            placeholder="อีเมล"
+            formControlName="email"
+            autocomplete="email"
+          />
+          <mat-error *ngIf="registerForm.get('email')?.hasError('required')">
+            กรุณากรอกอีเมล
+          </mat-error>
+          <mat-error *ngIf="registerForm.get('email')?.hasError('email')">
+            รูปแบบอีเมลไม่ถูกต้อง
+          </mat-error>
+        </mat-form-field>
+
+        <!-- Password -->
+        <mat-form-field appearance="outline">
+          <mat-icon matPrefix>lock</mat-icon>
+          <input
+            matInput
+            [type]="hidePassword ? 'password' : 'text'"
+            placeholder="รหัสผ่าน"
+            formControlName="password"
+            autocomplete="new-password"
+          />
+          <button
+            mat-icon-button matSuffix type="button"
+            (click)="hidePassword = !hidePassword"
+            class="password-toggle"
+          >
+            <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+          <mat-error *ngIf="registerForm.get('password')?.hasError('required')">
+            กรุณากรอกรหัสผ่าน
+          </mat-error>
+          <mat-error *ngIf="registerForm.get('password')?.hasError('minlength')">
+            รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร
+          </mat-error>
+          <mat-error *ngIf="
+            registerForm.get('password')?.hasError('weakPassword') &&
+            !registerForm.get('password')?.hasError('minlength')
+          ">
+            ต้องมีตัวพิมพ์ใหญ่ พิมพ์เล็ก ตัวเลข และ อักขระพิเศษ
+          </mat-error>
+        </mat-form-field>
+
+        <!-- Confirm Password -->
+        <mat-form-field appearance="outline">
+          <mat-icon matPrefix>lock_outline</mat-icon>
+          <input
+            matInput
+            [type]="hideConfirmPassword ? 'password' : 'text'"
+            placeholder="ยืนยันรหัสผ่าน"
+            formControlName="confirmPassword"
+            autocomplete="new-password"
+          />
+          <button
+            mat-icon-button matSuffix type="button"
+            (click)="hideConfirmPassword = !hideConfirmPassword"
+            class="password-toggle"
+          >
+            <mat-icon>{{ hideConfirmPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+          <mat-error *ngIf="registerForm.get('confirmPassword')?.hasError('required')">
+            กรุณายืนยันรหัสผ่าน
+          </mat-error>
+          <mat-error *ngIf="registerForm.get('confirmPassword')?.hasError('passwordMismatch')">
+            รหัสผ่านไม่ตรงกัน
+          </mat-error>
+        </mat-form-field>
+
+        <!-- Submit -->
+        <button
+          mat-raised-button
+          color="primary"
+          type="submit"
+          class="submit-button"
+          [disabled]="isLoading || registerForm.invalid"
+        >
+          <span *ngIf="!isLoading">สมัครสมาชิก</span>
+          <mat-spinner *ngIf="isLoading" diameter="24"></mat-spinner>
+        </button>
+
+      </form>
+    </div>
+
+    <!-- Success -->
+    <div class="success-container" *ngIf="isSuccess">
+      <div class="success-icon">
+        <mat-icon>check_circle</mat-icon>
+      </div>
+      <h2 class="success-title">สมัครสมาชิกสำเร็จ!</h2>
+      <p class="success-message">
+        กรุณาตรวจสอบอีเมลของคุณเพื่อยืนยันบัญชีผู้ใช้
+      </p>
+      <button mat-raised-button color="primary" class="action-button" (click)="goToLogin()">
+        ไปยังหน้าเข้าสู่ระบบ
+      </button>
+    </div>
+
+    <!-- Login Link -->
+    <div class="login-link" *ngIf="!isSuccess">
+      <span>มีบัญชีผู้ใช้แล้ว ? </span>
+      <a routerLink="/login">เข้าสู่ระบบ</a>
+    </div>
+
+  </mat-card>
+</div>

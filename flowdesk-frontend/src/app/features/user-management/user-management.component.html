@@ -1,0 +1,342 @@
+<div class="um-container">
+  <!-- Page Header -->
+  <div class="um-header">
+    <div class="um-header-left">
+      <div class="um-title-block">
+        <h1 class="um-title">จัดการผู้ใช้งาน</h1>
+        <p class="um-subtitle">จัดการ Role สิทธิ์ และการเข้าถึงของผู้ใช้งานทั้งหมด</p>
+      </div>
+    </div>
+    <div class="um-header-right">
+      <button class="btn-invite" (click)="openInviteDialog()">
+        <mat-icon>person_add</mat-icon>
+        เพิ่มผู้ใช้งาน
+      </button>
+    </div>
+  </div>
+
+  <!-- Summary Stats -->
+  <div class="um-stats-row">
+    <div class="um-stat-chip" *ngFor="let s of summaryStats">
+      <span class="um-stat-chip-dot" [style.background]="s.color"></span>
+      <span class="um-stat-chip-label">{{ s.label }}</span>
+      <span class="um-stat-chip-value">{{ s.value }}</span>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="um-toolbar">
+    <div class="um-search-wrap">
+      <mat-icon class="um-search-icon">search</mat-icon>
+      <input
+        class="um-search-input"
+        type="text"
+        placeholder="ค้นหาชื่อผู้ใช้งาน Role หรือ แผนก..."
+        [(ngModel)]="searchQuery"
+        (ngModelChange)="applyFilters()"
+      />
+      <button
+        class="um-search-clear"
+        *ngIf="searchQuery"
+        (click)="searchQuery = ''; applyFilters()"
+      >
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <div class="um-filters">
+      <mat-form-field class="um-mat-filter" appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Role</mat-label>
+        <mat-icon matPrefix>tune</mat-icon>
+        <mat-select
+          [(ngModel)]="filterRole"
+          (ngModelChange)="applyFilters()"
+          panelClass="um-filter-panel"
+        >
+          <mat-option value="">ทั้งหมด</mat-option>
+          <mat-option *ngFor="let r of availableRoles" [value]="r.value">
+            <span class="mat-option-inner">
+              {{ r.label }}
+            </span>
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field class="um-mat-filter" appearance="outline" subscriptSizing="dynamic">
+        <mat-label>แผนก</mat-label>
+        <mat-icon matPrefix>business</mat-icon>
+        <mat-select
+          [(ngModel)]="filterDepartment"
+          (ngModelChange)="applyFilters()"
+          panelClass="um-filter-panel"
+        >
+          <mat-option value="">ทั้งหมด</mat-option>
+          <mat-option *ngFor="let d of availableDepartments" [value]="d">{{ d }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field class="um-mat-filter" appearance="outline" subscriptSizing="dynamic">
+        <mat-label>สถานะ</mat-label>
+        <mat-icon matPrefix>radio_button_checked</mat-icon>
+        <mat-select
+          [(ngModel)]="filterStatus"
+          (ngModelChange)="applyFilters()"
+          panelClass="um-filter-panel"
+        >
+          <mat-option value="">ทั้งหมด</mat-option>
+          <mat-option value="active">
+            <span class="mat-option-inner">
+              <span class="opt-dot opt-active"></span>ใช้งานอยู่
+            </span>
+          </mat-option>
+          <mat-option value="inactive">
+            <span class="mat-option-inner">
+              <span class="opt-dot opt-inactive"></span>ไม่ใช้งาน
+            </span>
+          </mat-option>
+          <mat-option value="pending">
+            <span class="mat-option-inner">
+              <span class="opt-dot opt-pending"></span>รอดำเนินการ
+            </span>
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div class="um-view-toggle">
+      <button class="um-view-btn" [class.active]="viewMode === 'table'" (click)="viewMode = 'table'">
+        <mat-icon>table_rows</mat-icon>
+      </button>
+      <button class="um-view-btn" [class.active]="viewMode === 'card'" (click)="viewMode = 'card'">
+        <mat-icon>grid_view</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- TABLE VIEW -->
+  <div class="um-table-wrap" *ngIf="viewMode === 'table'">
+    <table class="um-table">
+      <thead>
+        <tr>
+          <th class="col-check">
+            <input
+              type="checkbox"
+              class="um-checkbox"
+              (change)="toggleSelectAll($event)"
+              [checked]="allSelected"
+            />
+          </th>
+          <th class="col-user sortable" (click)="sortBy('name')">
+            ผู้ใช้งาน
+            <mat-icon class="sort-icon" *ngIf="sortField === 'name'">
+              {{ sortDir === 'asc' ? 'arrow_upward' : 'arrow_downward' }}
+            </mat-icon>
+          </th>
+          <th class="col-role">Role</th>
+          <th class="col-dept sortable" (click)="sortBy('department')">
+            แผนก
+            <mat-icon class="sort-icon" *ngIf="sortField === 'department'">
+              {{ sortDir === 'asc' ? 'arrow_upward' : 'arrow_downward' }}
+            </mat-icon>
+          </th>
+          <th class="col-joined">วันที่เข้าร่วม</th>
+          <th class="col-actions">จัดการ</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          class="um-row"
+          *ngFor="let user of filteredUsers"
+          [class.selected]="selectedIds.has(user.id)"
+          [class.row-inactive]="user.status === 'inactive'"
+        >
+          <td class="col-check">
+            <input
+              type="checkbox"
+              class="um-checkbox"
+              [checked]="selectedIds.has(user.id)"
+              (change)="toggleSelect(user.id)"
+            />
+          </td>
+
+          <td class="col-user">
+            <div class="um-user-cell">
+              <div class="um-avatar" [style.background]="getAvatarGradient(user.name)">
+                <img *ngIf="user.avatar" [src]="user.avatar" [alt]="user.name" />
+                <span *ngIf="!user.avatar">{{ getInitials(user.name) }}</span>
+              </div>
+              <div class="um-user-info">
+                <div class="um-user-name">{{ user.name }}</div>
+                <div class="um-user-email">{{ user.email }}</div>
+              </div>
+            </div>
+          </td>
+
+          <td class="col-role">
+            <div class="um-role-dropdown" [class.open]="roleDropdownId === user.id">
+
+              <button
+                class="um-role-badge--btn"
+                (click)="toggleRoleDropdown(user.id, $event)"
+              >
+                <span class="um-role-badge" [attr.data-role]="user.role">
+                  <mat-icon>{{ getRoleIcon(user.role) }}</mat-icon>
+                  {{ getRoleLabel(user.role) }}
+                  <mat-icon class="chevron">expand_more</mat-icon>
+                </span>
+              </button>
+
+              <div class="um-role-dropdown-panel" *ngIf="roleDropdownId === user.id">
+                <button
+                  *ngFor="let r of availableRoles"
+                  class="um-role-dropdown-option"
+                  [class.selected]="r.value === user.role"
+                  (mousedown)="confirmRoleChange(user, r.value)"
+                >
+                  <span class="role-badge-pill" [attr.data-role]="r.value">
+                    <mat-icon>{{ getRoleIcon(r.value) }}</mat-icon>
+                    {{ r.label }}
+                  </span>
+                </button>
+              </div>
+
+            </div>
+          </td>
+
+          <td class="col-dept">
+            <span class="um-dept-tag">{{ user.department }}</span>
+          </td>
+          <td class="col-joined">
+            <span class="um-time">{{ user.joinedDate | date: 'dd MMM yyyy' }}</span>
+          </td>
+          <td class="col-actions">
+            <div class="um-row-actions">
+              <button class="um-action-btn" (click)="editUser(user)">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button class="um-action-btn danger" (click)="removeUser(user)">
+                <mat-icon>delete_outline</mat-icon>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="um-empty" *ngIf="filteredUsers.length === 0">
+      <mat-icon>manage_search</mat-icon>
+      <p>ไม่พบผู้ใช้งานที่ตรงกับเงื่อนไข</p>
+      <button class="btn-secondary" (click)="clearFilters()">ล้างตัวกรอง</button>
+    </div>
+  </div>
+
+  <!-- CARD VIEW -->
+  <div class="um-cards-grid" *ngIf="viewMode === 'card'">
+    <div
+      class="um-user-card"
+      *ngFor="let user of filteredUsers"
+      [class.card-inactive]="user.status === 'inactive'"
+    >
+      <div class="ucard-top">
+        <div class="ucard-avatar" [style.background]="getAvatarGradient(user.name)">
+          <img *ngIf="user.avatar" [src]="user.avatar" [alt]="user.name" />
+          <span *ngIf="!user.avatar">{{ getInitials(user.name) }}</span>
+        </div>
+        <button
+          class="ucard-menu-btn"
+          [matMenuTriggerFor]="menu"
+          (click)="$event.stopPropagation()"
+        >
+          <mat-icon>more_vert</mat-icon>
+        </button>
+        <mat-menu #menu="matMenu" class="um-card-menu-panel">
+          <button mat-menu-item (click)="editUser(user)">
+            <mat-icon>edit</mat-icon>
+            <span>แก้ไขข้อมูล</span>
+          </button>
+          <button mat-menu-item class="menu-item-danger" (click)="removeUser(user)">
+            <mat-icon>delete_outline</mat-icon>
+            <span>ลบผู้ใช้งาน</span>
+          </button>
+        </mat-menu>
+      </div>
+
+      <div class="ucard-body">
+        <div class="ucard-name">{{ user.name }}</div>
+        <div class="ucard-email">{{ user.email }}</div>
+        <div class="ucard-dept">{{ user.department }}</div>
+      </div>
+
+      <!--
+        card footer: ใช้ dropdown เดียวกับ table
+        id ซ้ำกันไม่ได้ — ใช้ prefix 'card-' แยก namespace
+      -->
+      <div class="ucard-footer">
+        <span class="ucard-joined">
+          <mat-icon>calendar_today</mat-icon>
+          {{ user.joinedDate | date: 'dd MMM yyyy' }}
+        </span>
+
+        <div class="um-role-dropdown" [class.open]="roleDropdownId === 'card-' + user.id">
+          <button
+            class="um-role-badge--btn"
+            (click)="toggleRoleDropdown('card-' + user.id, $event)"
+          >
+            <span class="ucard-role-badge" [attr.data-role]="user.role">
+              <mat-icon>{{ getRoleIcon(user.role) }}</mat-icon>
+              {{ getRoleLabel(user.role) }}
+              <mat-icon class="chevron">expand_more</mat-icon>
+            </span>
+          </button>
+
+          <div class="um-role-dropdown-panel ucard-dropdown-panel"
+               *ngIf="roleDropdownId === 'card-' + user.id">
+            <button
+              *ngFor="let r of availableRoles"
+              class="um-role-dropdown-option"
+              [class.selected]="r.value === user.role"
+              (mousedown)="confirmRoleChange(user, r.value)"
+            >
+              <span class="role-badge-pill" [attr.data-role]="r.value">
+                <mat-icon>{{ getRoleIcon(r.value) }}</mat-icon>
+                {{ r.label }}
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div class="um-pagination" *ngIf="filteredUsers.length > 0">
+    <span class="um-pagination-info">
+      แสดง {{ filteredUsers.length }} จาก {{ users.length }} รายการ
+    </span>
+    <div class="um-pagination-btns">
+      <button class="um-page-btn" [disabled]="currentPage === 1" (click)="changePage(-1)">
+        <mat-icon>chevron_left</mat-icon>
+      </button>
+      <span class="um-page-current">{{ currentPage }}</span>
+      <button class="um-page-btn" [disabled]="currentPage >= totalPages" (click)="changePage(1)">
+        <mat-icon>chevron_right</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- Bulk Action Bar -->
+  <div class="um-bulk-bar" [class.visible]="selectedIds.size > 0">
+    <span>เลือกแล้ว {{ selectedIds.size }} รายการ</span>
+    <div class="um-bulk-actions">
+      <button class="btn-bulk" (click)="bulkChangeRole()">
+        <mat-icon>manage_accounts</mat-icon> เปลี่ยน Role
+      </button>
+      <button class="btn-bulk danger" (click)="bulkRemove()">
+        <mat-icon>delete_sweep</mat-icon> ลบที่เลือก
+      </button>
+      <button class="btn-bulk-cancel" (click)="clearSelection()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+  </div>
+</div>

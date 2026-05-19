@@ -1,0 +1,190 @@
+<div class="dashboard-container">
+  <div class="dashboard-content">
+
+    <!-- Welcome -->
+    <div class="welcome-section">
+      <div class="welcome-text">
+        <h1>สรุปภาพรวมคำขอของคุณในวันนี้</h1>
+      </div>
+      <button class="btn-new-request" (click)="createNewRequest()">
+        <mat-icon>add</mat-icon>
+        สร้างคำขอใหม่
+      </button>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card" *ngFor="let stat of stats" [style.--card-color]="stat.color">
+        <div class="stat-icon" [style.background-color]="stat.bgColor">
+          <mat-icon [style.color]="stat.color">{{ stat.icon }}</mat-icon>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">{{ stat.value }}</div>
+          <div class="stat-title">{{ stat.title }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pending Approval Banner -->
+    <div class="approval-banner"
+         *ngIf="canApprove() && pendingApprovals.length > 0"
+         (click)="goToPendingApprovals()">
+      <div class="banner-left">
+        <div class="banner-pulse"></div>
+        <mat-icon>pending_actions</mat-icon>
+        <span>
+          มี <strong>{{ pendingApprovals.length }} คำขอ</strong>
+          รอการอนุมัติจากคุณ
+        </span>
+        <span class="high-tag" *ngIf="highPriorityCount > 0">
+          <mat-icon>flag</mat-icon>{{ highPriorityCount }} เร่งด่วน
+        </span>
+      </div>
+      <div class="banner-right">
+        ดูและอนุมัติ <mat-icon>arrow_forward</mat-icon>
+      </div>
+    </div>
+
+    <!-- Content Grid -->
+    <div class="content-grid">
+
+      <!-- Left: คำขอของฉัน -->
+      <div class="left-col">
+        <div class="section-card">
+          <div class="card-header">
+            <div class="header-left">
+              <mat-icon class="header-icon">assignment</mat-icon>
+              <h2>คำขอของฉัน</h2>
+              <span class="count-chip">{{ myRequests.length }}</span>
+            </div>
+          </div>
+
+          <div class="requests-list" *ngIf="myRequests.length > 0">
+            <div class="request-item" *ngFor="let req of myRequests"
+                 (click)="viewRequest(req.id)">
+
+              <div class="req-top">
+                <div class="req-left">
+                  <span class="req-id">{{ req.id }}</span>
+                  <span class="req-type">{{ req.requestType }}</span>
+                </div>
+                <div class="req-right">
+                  <span class="priority-dot"
+                        [class]="'p-' + req.priority"
+                        title="{{ req.priority }}">
+                  </span>
+                  <span class="status-badge" [class]="'s-' + req.status">
+                    <mat-icon>{{ getStatusIcon(req.status) }}</mat-icon>
+                    {{ req.status | titlecase }}
+                  </span>
+                  <button class="more-btn"
+                          [matMenuTriggerFor]="reqMenu"
+                          (click)="$event.stopPropagation()">
+                    <mat-icon>more_horiz</mat-icon>
+                  </button>
+                  <mat-menu #reqMenu="matMenu">
+                    <button mat-menu-item (click)="viewRequest(req.id)">
+                      <mat-icon>visibility</mat-icon>
+                      <span>ดูรายละเอียด</span>
+                    </button>
+                    <button mat-menu-item
+                            (click)="editRequest(req)"
+                            [disabled]="req.status !== 'pending'">
+                      <mat-icon>edit</mat-icon>
+                      <span>แก้ไข</span>
+                    </button>
+                    <button mat-menu-item
+                            class="menu-danger"
+                            (click)="deleteRequest(req)"
+                            [disabled]="req.status !== 'pending'">
+                      <mat-icon>delete_outline</mat-icon>
+                      <span>ลบ</span>
+                    </button>
+                  </mat-menu>
+                </div>
+              </div>
+
+              <div class="req-title">{{ req.title }}</div>
+              <div class="req-desc" *ngIf="req.description">{{ req.description }}</div>
+
+              <!-- ขั้นตอนการดำเนินงาน -->
+              <div class="workflow-row">
+                <div class="wf-step"
+                     *ngFor="let step of req.workflow; let last = last"
+                     [class.done]="step.status === 'completed'"
+                     [class.active]="step.status === 'in-progress'"
+                     [class.failed]="step.status === 'rejected'">
+                  <div class="wf-dot">
+                    <mat-icon *ngIf="step.status === 'completed'">check</mat-icon>
+                    <mat-icon *ngIf="step.status === 'in-progress'">sync</mat-icon>
+                    <mat-icon *ngIf="step.status === 'rejected'">close</mat-icon>
+                  </div>
+                  <span class="wf-name">{{ step.name }}</span>
+                  <div class="wf-line" *ngIf="!last"></div>
+                </div>
+              </div>
+
+              <div class="req-footer">
+                <span class="req-time">
+                  <mat-icon>schedule</mat-icon>
+                  {{ getRelativeTime(req.lastUpdate) }}
+                </span>
+                <span class="req-step">{{ req.currentStep }}</span>
+              </div>
+
+            </div>
+          </div>
+
+          <div class="empty-state" *ngIf="myRequests.length === 0">
+            <mat-icon>inbox</mat-icon>
+            <p>ยังไม่มีคำขอ</p>
+            <button class="btn-new-request sm" (click)="createNewRequest()">
+              สร้างคำขอแรกของคุณ
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Right: กิจกรรมล่าสุด -->
+      <div class="right-col">
+        <div class="section-card">
+          <div class="card-header">
+            <div class="header-left">
+              <mat-icon class="header-icon">history</mat-icon>
+              <h2>กิจกรรมล่าสุด</h2>
+            </div>
+          </div>
+
+          <div class="activity-list" *ngIf="recentActivities.length > 0">
+            <div class="activity-item" *ngFor="let act of recentActivities">
+              <div class="act-icon"
+                   [style.background]="getActivityColor(act.type) + '18'">
+                <mat-icon [style.color]="getActivityColor(act.type)">
+                  {{ getActivityIcon(act.type) }}
+                </mat-icon>
+              </div>
+              <div class="act-body">
+                <div class="act-text">
+                  <strong>{{ act.user }}</strong> {{ act.action }}
+                  <span class="act-req-id"
+                        (click)="viewRequest(act.requestId); $event.stopPropagation()">
+                    {{ act.requestId }}
+                  </span>
+                </div>
+                <div class="act-time">{{ getRelativeTime(act.timestamp) }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="empty-state-sm" *ngIf="recentActivities.length === 0">
+            <mat-icon>history</mat-icon>
+            <p>ยังไม่มีกิจกรรม</p>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

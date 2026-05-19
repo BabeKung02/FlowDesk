@@ -1,0 +1,46 @@
+<div class="sidebar">
+  <div class="sidebar-header">
+    <mat-icon class="brand-icon">description</mat-icon>
+    <span class="brand-name">FlowDesk</span>
+  </div>
+  
+  <div class="sidebar-menu">
+    <div 
+      class="menu-item" 
+      [class.active]="activeRoute === 'dashboard'"
+      (click)="navigateTo('dashboard')"
+    >
+      <mat-icon>dashboard</mat-icon>
+      <span>Dashboard</span>
+    </div>
+    
+    <div 
+      class="menu-item" 
+      [class.active]="activeRoute === 'user-management'"
+      (click)="navigateTo('user-management')"
+    >
+      <mat-icon>people</mat-icon>
+      <span>User Management</span>
+    </div>
+    
+    <div 
+      class="menu-item" 
+      [class.active]="activeRoute === 'requests'"
+      (click)="navigateTo('requests')"
+    >
+      <mat-icon>assignment</mat-icon>
+      <span>All Requests</span>
+    </div>
+    
+    <div 
+      class="menu-item" 
+      [class.active]="activeRoute === 'approvals'"
+      (click)="navigateTo('approvals')"
+      *ngIf="canApprove()"
+    >
+      <mat-icon>pending_actions</mat-icon>
+      <span>Approvals</span>
+      <span class="badge" *ngIf="pendingApprovals.length > 0">{{ pendingApprovals.length }}</span>
+    </div>
+  </div>
+</div>

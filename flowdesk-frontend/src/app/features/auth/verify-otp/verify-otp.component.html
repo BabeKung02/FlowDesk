@@ -1,0 +1,92 @@
+<div class="verify-container">
+  <mat-card class="verify-card">
+
+    <!-- Header -->
+    <div class="header">
+      <div class="icon-container">
+        <mat-icon>mark_email_read</mat-icon>
+      </div>
+      <h1 class="title">ยืนยันตัวตน</h1>
+      <p class="subtitle">
+        ส่งรหัส OTP 6 หลักไปยัง
+      </p>
+      <p class="email-display">{{ email }}</p>
+    </div>
+
+    <!-- Form -->
+    <div class="form-container">
+      <form [formGroup]="otpForm" (ngSubmit)="onSubmit()" class="otp-form">
+
+        <!-- Error Banner -->
+        <div class="error-message" *ngIf="errorMessage">
+          <mat-icon>error_outline</mat-icon>
+          <div class="error-message-style">{{ errorMessage }}</div>
+        </div>
+
+        <!-- OTP Input -->
+        <mat-form-field appearance="outline">
+          <mat-icon matPrefix>password</mat-icon>
+          <input
+            matInput
+            type="text"
+            placeholder="000000"
+            formControlName="otp"
+            maxlength="6"
+            autocomplete="one-time-code"
+            inputmode="numeric"
+          />
+          <mat-error *ngIf="otpForm.get('otp')?.hasError('required')">
+            กรุณากรอกรหัส OTP
+          </mat-error>
+          <mat-error *ngIf="otpForm.get('otp')?.hasError('pattern')">
+            กรอกเฉพาะตัวเลขเท่านั้น
+          </mat-error>
+          <mat-error *ngIf="otpForm.get('otp')?.hasError('minlength') || otpForm.get('otp')?.hasError('maxlength')">
+            รหัส OTP ต้องมี 6 หลัก
+          </mat-error>
+        </mat-form-field>
+
+        <!-- Countdown -->
+        <div class="countdown" [class.expired]="countdown <= 0">
+          <mat-icon>timer</mat-icon>
+          <span *ngIf="countdown > 0">รหัสหมดอายุใน {{ countdownDisplay }}</span>
+          <span *ngIf="countdown <= 0">รหัสหมดอายุแล้ว</span>
+        </div>
+
+        <!-- Submit -->
+        <button
+          mat-raised-button
+          color="primary"
+          type="submit"
+          class="submit-button"
+          [disabled]="isLoading || otpForm.invalid || countdown <= 0"
+        >
+          <mat-spinner *ngIf="isLoading" diameter="20"></mat-spinner>
+          <span *ngIf="!isLoading">ยืนยัน OTP</span>
+        </button>
+
+        <!-- Resend -->
+        <div class="resend-section">
+          <button
+            type="button"
+            class="resend-btn"
+            (click)="resendOTP()"
+            [disabled]="isLoading"
+          >
+            ส่งรหัส OTP ใหม่อีกครั้ง
+          </button>
+        </div>
+
+        <!-- Back -->
+        <div class="back-link">
+          <a routerLink="/login">
+            <mat-icon>arrow_back</mat-icon>
+            กลับไปหน้าเข้าสู่ระบบ
+          </a>
+        </div>
+
+      </form>
+    </div>
+
+  </mat-card>
+</div>

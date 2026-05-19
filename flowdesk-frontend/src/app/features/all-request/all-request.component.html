@@ -1,0 +1,262 @@
+<div class="page-container">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <span class="page-eyebrow">ระบบจัดการคำขอ</span>
+      <h1 class="page-title">รายการคำขอทั้งหมด</h1>
+      <p class="page-subtitle">ติดตาม ตรวจสอบ และจัดการคำขอภายในระบบ</p>
+    </div>
+    <button class="btn-new" (click)="createNewRequest()">
+      <mat-icon>add</mat-icon>
+      สร้างคำขอใหม่
+    </button>
+  </div>
+
+  <!-- Statistics -->
+  <div class="stats-grid">
+    <div class="stat-card" *ngFor="let stat of stats" [style.--card-color]="stat.color">
+      <div class="stat-icon" [style.background-color]="stat.bgColor">
+        <mat-icon [style.color]="stat.color">{{ stat.icon }}</mat-icon>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value">{{ stat.value }}</div>
+        <div class="stat-title">{{ stat.title }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="um-toolbar">
+
+    <!-- Search -->
+    <div class="um-search-wrap">
+      <mat-icon class="um-search-icon">search</mat-icon>
+      <input
+        class="um-search-input"
+        type="text"
+        placeholder="ค้นหาเลขคำขอ หัวข้อ ผู้ร้องขอ หรือแผนก"
+        [(ngModel)]="searchTerm"
+        (ngModelChange)="applyFilters()"
+      />
+      <button class="um-search-clear" *ngIf="searchTerm"
+              (click)="searchTerm = ''; applyFilters()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <!-- Filters -->
+    <div class="um-filters">
+
+      <div class="um-filter-wrap">
+        <label>สถานะ</label>
+        <select [(ngModel)]="filterStatus" (ngModelChange)="applyFilters()">
+          <option value="all">ทั้งหมด</option>
+          <option value="pending">รอดำเนินการ</option>
+          <option value="in-progress">กำลังดำเนินการ</option>
+          <option value="approved">อนุมัติแล้ว</option>
+          <option value="rejected">ถูกปฏิเสธ</option>
+          <option value="completed">เสร็จสิ้น</option>
+        </select>
+      </div>
+
+      <div class="um-filter-wrap">
+        <label>ประเภทคำขอ</label>
+        <select [(ngModel)]="filterType" (ngModelChange)="applyFilters()">
+          <option value="all">ทั้งหมด</option>
+          <option *ngFor="let type of requestTypes" [value]="type">{{ type }}</option>
+        </select>
+      </div>
+
+      <div class="um-filter-wrap">
+        <label>ระดับความสำคัญ</label>
+        <select [(ngModel)]="filterPriority" (ngModelChange)="applyFilters()">
+          <option value="all">ทั้งหมด</option>
+          <option value="สูง">สูง</option>
+          <option value="ปานกลาง">ปานกลาง</option>
+          <option value="ต่ำ">ต่ำ</option>
+        </select>
+      </div>
+
+    </div>
+
+    <!-- Actions -->
+    <div class="um-toolbar-actions">
+      <button class="btn-clear" *ngIf="hasActiveFilters()" (click)="clearFilters()">
+        <mat-icon>filter_alt_off</mat-icon>
+        ล้างตัวกรอง
+      </button>
+      <button class="btn-export" (click)="exportCSV()">
+        <mat-icon>download</mat-icon>
+        ส่งออก CSV
+      </button>
+    </div>
+
+  </div>
+
+  <!-- Active Filter Chips -->
+  <div class="active-chips" *ngIf="hasActiveFilters()">
+    <span class="chips-label">ตัวกรองที่กำลังใช้งาน:</span>
+
+    <span class="chip" *ngIf="searchTerm">
+      "{{ searchTerm }}"
+      <button (click)="searchTerm = ''; applyFilters()"><mat-icon>close</mat-icon></button>
+    </span>
+
+    <span class="chip" *ngIf="filterStatus !== 'all'">
+      สถานะ: {{ getFilterStatusLabel(filterStatus) }}
+      <button (click)="filterStatus = 'all'; applyFilters()"><mat-icon>close</mat-icon></button>
+    </span>
+
+    <span class="chip" *ngIf="filterType !== 'all'">
+      ประเภท: {{ filterType }}
+      <button (click)="filterType = 'all'; applyFilters()"><mat-icon>close</mat-icon></button>
+    </span>
+
+    <span class="chip" *ngIf="filterPriority !== 'all'">
+      ความสำคัญ: {{ filterPriority }}
+      <button (click)="filterPriority = 'all'; applyFilters()"><mat-icon>close</mat-icon></button>
+    </span>
+  </div>
+
+  <!-- Table -->
+  <div class="um-table-wrap">
+
+    <div class="table-meta-row">
+      <span class="result-count">
+        แสดงผล <strong>{{ filteredRequests.length }}</strong>
+        จากทั้งหมด <strong>{{ allRequests.length }}</strong> รายการ
+      </span>
+    </div>
+
+    <table class="um-table">
+      <thead>
+        <tr>
+          <th class="col-id sortable" (click)="sortBy('id')">
+            เลขที่คำขอ
+            <mat-icon class="sort-icon" *ngIf="sortField === 'id'">
+              {{ sortDir === 'asc' ? 'arrow_upward' : 'arrow_downward' }}
+            </mat-icon>
+          </th>
+          <th class="col-title sortable" (click)="sortBy('title')">
+            หัวข้อคำขอ
+            <mat-icon class="sort-icon" *ngIf="sortField === 'title'">
+              {{ sortDir === 'asc' ? 'arrow_upward' : 'arrow_downward' }}
+            </mat-icon>
+          </th>
+          <th class="col-type">ประเภท</th>
+          <th class="col-requester sortable" (click)="sortBy('requester')">
+            ผู้ร้องขอ
+            <mat-icon class="sort-icon" *ngIf="sortField === 'requester'">
+              {{ sortDir === 'asc' ? 'arrow_upward' : 'arrow_downward' }}
+            </mat-icon>
+          </th>
+          <th class="col-priority sortable" (click)="sortBy('priority')">
+            ความสำคัญ
+            <mat-icon class="sort-icon" *ngIf="sortField === 'priority'">
+              {{ sortDir === 'asc' ? 'arrow_upward' : 'arrow_downward' }}
+            </mat-icon>
+          </th>
+          <th class="col-status sortable" (click)="sortBy('status')">
+            สถานะ
+            <mat-icon class="sort-icon" *ngIf="sortField === 'status'">
+              {{ sortDir === 'asc' ? 'arrow_upward' : 'arrow_downward' }}
+            </mat-icon>
+          </th>
+          <th class="col-date sortable" (click)="sortBy('submittedDate')">
+            วันที่ส่งคำขอ
+            <mat-icon class="sort-icon" *ngIf="sortField === 'submittedDate'">
+              {{ sortDir === 'asc' ? 'arrow_upward' : 'arrow_downward' }}
+            </mat-icon>
+          </th>
+          <th class="col-actions"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="um-row" *ngFor="let req of paginatedRequests" (click)="viewRequest(req)">
+
+          <td><span class="req-id-link">{{ req.id }}</span></td>
+
+          <td>
+            <div class="title-main">{{ req.title }}</div>
+            <div class="title-sub" *ngIf="req.description">{{ req.description }}</div>
+          </td>
+
+          <td><span class="type-chip">{{ req.requestType }}</span></td>
+
+          <td>
+            <div class="requester-cell">
+              <div class="avatar-sm">{{ req.requester.charAt(0) }}</div>
+              <div>
+                <div class="requester-name">{{ req.requester }}</div>
+                <div class="requester-dept">{{ req.department }}</div>
+              </div>
+            </div>
+          </td>
+
+          <td>
+            <span class="priority-badge" [ngClass]="getPriorityClass(req.priority)">
+              <mat-icon>flag</mat-icon>
+              {{ req.priority }}
+            </span>
+          </td>
+
+          <td>
+            <span class="status-badge" [ngClass]="'status-' + req.status">
+              <mat-icon>{{ getStatusIcon(req.status) }}</mat-icon>
+              {{ getStatusLabel(req.status) }}
+            </span>
+          </td>
+
+          <td>
+            <div class="date-main">{{ req.submittedDate | date:'dd MMM yyyy' }}</div>
+            <div class="date-sub">{{ getRelativeTime(req.submittedDate) }}</div>
+          </td>
+
+          <td>
+            <div class="um-row-actions" (click)="$event.stopPropagation()">
+              <button class="um-action-btn"
+                      (click)="editRequest(req)"
+                      [disabled]="req.status !== 'pending'"
+                      title="แก้ไข">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button class="um-action-btn danger"
+                      (click)="deleteRequest(req)"
+                      [disabled]="req.status !== 'pending'"
+                      title="ลบ">
+                <mat-icon>delete_outline</mat-icon>
+              </button>
+            </div>
+          </td>
+
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Empty State -->
+    <div class="um-empty" *ngIf="filteredRequests.length === 0">
+      <mat-icon>search_off</mat-icon>
+      <p>ไม่พบข้อมูลที่ตรงกับเงื่อนไขการค้นหา</p>
+      <button class="btn-secondary" (click)="clearFilters()">ล้างตัวกรอง</button>
+    </div>
+
+    <!-- Pagination -->
+    <div class="um-pagination" *ngIf="filteredRequests.length > 0">
+      <span class="pagination-info">
+        หน้า {{ currentPage }} จาก {{ totalPages }}
+      </span>
+      <div class="pagination-btns">
+        <button class="page-btn" [disabled]="currentPage === 1" (click)="changePage(-1)">
+          <mat-icon>chevron_left</mat-icon>
+        </button>
+        <span class="page-current">{{ currentPage }}</span>
+        <button class="page-btn" [disabled]="currentPage >= totalPages" (click)="changePage(1)">
+          <mat-icon>chevron_right</mat-icon>
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+</div>
