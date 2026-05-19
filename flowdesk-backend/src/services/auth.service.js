@@ -1,0 +1,237 @@
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import prisma from "../config/database.js";
+import { generateOTP, sendOTPEmail } from "./email.service.js";
+
+const normalize = (email) => email.toLowerCase();
+
+const createOTPData = (purpose) => ({
+  otpCode: generateOTP(),
+  otpExpires: new Date(Date.now() + 10 * 60 * 1000),
+  otpPurpose: purpose,
+});
+
+const clearOTP = { otpCode: null, otpExpires: null, otpPurpose: null };
+
+const createError = (message, status) =>
+  Object.assign(new Error(message), { status });
+
+// ── Register ─────────────────────────────────────────
+const register = async ({ firstName, lastName, email, password }) => {
+  const normalizedEmail = normalize(email);
+  const existing = await prisma.user.findUnique({
+    where: { email: normalizedEmail },
+  });
+
+  if (existing?.isVerified) throw createError("อีเมลนี้ถูกใช้งานแล้ว", 409);
+
+  const otpData = createOTPData("VERIFY_EMAIL");
+
+  if (existing) {
+    await prisma.user.update({
+      where: { email: normalizedEmail },
+      data: otpData,
+    });
+  } else {
+    const hashed = await bcrypt.hash(password, 12);
+    await prisma.user.create({
+      data: {
+        firstName,
+        lastName,
+        email: normalizedEmail,
+        password: hashed,
+        ...otpData,
+      },
+    });
+  }
+
+  await sendOTPEmail(normalizedEmail, otpData.otpCode, "VERIFY_EMAIL");
+  return {
+    message: "สมัครสมาชิกสำเร็จ กรุณาตรวจสอบอีเมลของคุณ",
+    otpExpires: otpData.otpExpires,
+  };
+};
+
+// ── Verify Email ──────────────────────────────────────
+const verifyEmail = async ({ email, otp }) => {
+  const normalizedEmail = normalize(email);
+  const user = await prisma.user.findUnique({
+    where: { email: normalizedEmail },
+  });
+
+  if (!user) throw createError("ไม่พบผู้ใช้งาน", 404);
+  if (user.otpExpires < new Date())
+    throw createError("รหัส OTP หมดอายุแล้ว กรุณาขอรหัสใหม่", 400);
+  if (user.otpPurpose !== "VERIFY_EMAIL" || user.otpCode !== otp)
+    throw createError("รหัส OTP ไม่ถูกต้อง", 400);
+
+  await prisma.user.update({
+    where: { email: normalizedEmail },
+    data: { isVerified: true, ...clearOTP },
+  });
+
+  return { message: "ยืนยันอีเมลสำเร็จ" };
+};
+
+// ── Login ─────────────────────────────────────────────
+const login = async ({ email, password }) => {
+  const normalizedEmail = normalize(email);
+  const user = await prisma.user.findUnique({
+    where: { email: normalizedEmail },
+  });
+
+  if (!user) throw createError("อีเมลหรือรหัสผ่านไม่ถูกต้อง", 401);
+  if (!user.isVerified)
+    throw createError(
+      "กรุณายืนยันอีเมลของคุณด้วยรหัส OTP ก่อนเข้าสู่ระบบ",
+      403,
+    );
+
+  const isMatch = await bcrypt.compare(password, user.password);
+  if (!isMatch) throw createError("อีเมลหรือรหัสผ่านไม่ถูกต้อง", 401);
+
+  const token = jwt.sign(
+    { id: user.id, email: user.email },
+    process.env.JWT_SECRET,
+    { expiresIn: process.env.JWT_EXPIRES_IN },
+  );
+
+  return {
+    token,
+    user: {
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+    },
+  };
+};
+
+// ── Forgot Password ───────────────────────────────────
+const forgotPassword = async ({ email }) => {
+  const normalizedEmail = normalize(email);
+  const user = await prisma.user.findUnique({
+    where: { email: normalizedEmail },
+  });
+
+  if (!user)
+    return { message: "หากอีเมลนี้มีในระบบ รหัส OTP จะถูกส่งไปยังอีเมลของคุณ" };
+
+  const otpData = createOTPData("FORGOT_PASSWORD");
+  await prisma.user.update({
+    where: { email: normalizedEmail },
+    data: otpData,
+  });
+
+  await sendOTPEmail(normalizedEmail, otpData.otpCode, "FORGOT_PASSWORD");
+  return { message: "หากอีเมลนี้มีในระบบ รหัส OTP จะถูกส่งไปยังอีเมลของคุณ" };
+};
+
+// ── Reset Password ────────────────────────────────────
+const resetPassword = async ({ email, otp, newPassword }) => {
+  const normalizedEmail = normalize(email);
+  const user = await prisma.user.findUnique({
+    where: { email: normalizedEmail },
+  });
+
+  if (!user) throw createError("คำขอไม่ถูกต้อง", 400);
+  if (user.otpExpires < new Date())
+    throw createError("รหัส OTP หมดอายุแล้ว กรุณาขอรหัสใหม่", 400);
+  if (user.otpPurpose !== "FORGOT_PASSWORD" || user.otpCode !== otp)
+    throw createError("รหัส OTP ไม่ถูกต้อง", 400);
+
+  const hashed = await bcrypt.hash(newPassword, 12);
+  await prisma.user.update({
+    where: { email: normalizedEmail },
+    data: { password: hashed, ...clearOTP },
+  });
+
+  return { message: "เปลี่ยนรหัสผ่านสำเร็จ" };
+};
+
+// ── Change Password ───────────────────────────────────
+const changePassword = async ({ userId, currentPassword, newPassword }) => {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) throw createError("ไม่พบผู้ใช้งาน", 404);
+
+  const isMatch = await bcrypt.compare(currentPassword, user.password);
+  if (!isMatch) throw createError("รหัสผ่านปัจจุบันไม่ถูกต้อง", 400);
+
+  const hashed = await bcrypt.hash(newPassword, 12);
+  await prisma.user.update({
+    where: { id: userId },
+    data: { password: hashed },
+  });
+
+  return { message: "เปลี่ยนรหัสผ่านสำเร็จ" };
+};
+
+const resendOTP = async ({ email }) => {
+  const normalizedEmail = normalize(email);
+  const user = await prisma.user.findUnique({
+    where: { email: normalizedEmail },
+  });
+
+  if (!user) throw createError("ไม่พบผู้ใช้งาน", 404);
+  if (user.isVerified) throw createError("อีเมลนี้ยืนยันแล้ว", 400);
+
+  const otpData = createOTPData("VERIFY_EMAIL");
+  await prisma.user.update({
+    where: { email: normalizedEmail },
+    data: otpData,
+  });
+
+  await sendOTPEmail(normalizedEmail, otpData.otpCode, "VERIFY_EMAIL");
+  return {
+    message: "ส่งรหัส OTP ใหม่แล้ว กรุณาตรวจสอบอีเมล",
+    otpExpires: otpData.otpExpires,
+  };
+};
+
+const getOTPStatus = async ({ email }) => {
+  const normalizedEmail = normalize(email);
+  const user = await prisma.user.findUnique({
+    where: { email: normalizedEmail },
+    select: { otpExpires: true, otpPurpose: true, isVerified: true }
+  });
+
+  if (!user) throw createError("ไม่พบผู้ใช้งาน", 404);
+  if (user.isVerified) throw createError("อีเมลนี้ยืนยันแล้ว", 400);
+  if (!user.otpExpires) throw createError("ไม่มี OTP ที่ใช้งานได้", 400);
+
+  const remainingSeconds = Math.floor(
+    (new Date(user.otpExpires).getTime() - Date.now()) / 1000
+  );
+
+  return {
+    remainingSeconds: remainingSeconds > 0 ? remainingSeconds : 0,
+    isExpired: remainingSeconds <= 0,
+  };
+};
+
+const verifyForgotOTP = async ({ email, otp }) => {
+  const normalizedEmail = normalize(email);
+  const user = await prisma.user.findUnique({
+    where: { email: normalizedEmail },
+  });
+
+  if (!user) throw createError("ไม่พบผู้ใช้งาน", 404);
+  if (user.otpExpires < new Date())
+    throw createError("รหัส OTP หมดอายุแล้ว กรุณาขอรหัสใหม่", 400);
+  if (user.otpPurpose !== "FORGOT_PASSWORD" || user.otpCode !== otp)
+    throw createError("รหัส OTP ไม่ถูกต้อง", 400);
+
+  return { message: "ยืนยัน OTP สำเร็จ" };
+};
+
+export default {
+  register,
+  verifyEmail,
+  login,
+  forgotPassword,
+  resetPassword,
+  changePassword,
+  resendOTP,
+  getOTPStatus,
+  verifyForgotOTP
+};
