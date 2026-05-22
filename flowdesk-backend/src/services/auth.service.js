@@ -16,6 +16,22 @@ const clearOTP = { otpCode: null, otpExpires: null, otpPurpose: null };
 const createError = (message, status) =>
   Object.assign(new Error(message), { status });
 
+// ── Helper สำหรับสร้างตั๋วคู่ ──────────────────────────
+const generateAuthTokens = (user) => {
+  // ใช้ user_id ให้ตรงตาม Schema ของเรา
+  const payload = { id: user.user_id, email: user.email }; 
+
+  const accessToken = jwt.sign(payload, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRES_IN,
+  });
+
+  const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET, {
+    expiresIn: process.env.JWT_REFRESH_EXPIRES_IN,
+  });
+
+  return { accessToken, refreshToken };
+};
+
 // ── Register ─────────────────────────────────────────
 const register = async ({ firstName, lastName, email, password }) => {
   const normalizedEmail = normalize(email);
@@ -73,7 +89,7 @@ const verifyEmail = async ({ email, otp }) => {
   return { message: "ยืนยันอีเมลสำเร็จ" };
 };
 
-// ── Login ─────────────────────────────────────────────
+// ── Login (แก้ไขเพิ่มฟีเจอร์ตั๋วคู่และบันทึก DB แล้ว) ────────────
 const login = async ({ email, password }) => {
   const normalizedEmail = normalize(email);
   const user = await prisma.user.findUnique({
@@ -90,16 +106,21 @@ const login = async ({ email, password }) => {
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) throw createError("อีเมลหรือรหัสผ่านไม่ถูกต้อง", 401);
 
-  const token = jwt.sign(
-    { id: user.id, email: user.email },
-    process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRES_IN },
-  );
+  // 🔥 1. เรียกใช้งานฟังก์ชันเจนโทเคนคู่ที่สร้างไว้ด้านบน
+  const { accessToken, refreshToken } = generateAuthTokens(user);
 
+  // 💾 2. บันทึก Refresh Token ตัวล่าสุดนี้ลงคอลัมน์ใหม่ในตาราง users ของ PostgreSQL
+  await prisma.user.update({
+    where: { user_id: user.user_id },
+    data: { refreshToken: refreshToken },
+  });
+
+  // 🏎️ 3. ส่งกลับหน้าบ้านให้ครบถ้วนทั้งสองใบ
   return {
-    token,
+    accessToken,
+    refreshToken,
     user: {
-      id: user.id,
+      id: user.user_id,
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
@@ -149,9 +170,9 @@ const resetPassword = async ({ email, otp, newPassword }) => {
   return { message: "เปลี่ยนรหัสผ่านสำเร็จ" };
 };
 
-// ── Change Password ───────────────────────────────────
+// ── Change Password (แก้ไขคีย์ไอดีเป็น user_id แล้ว) ──────────
 const changePassword = async ({ userId, currentPassword, newPassword }) => {
-  const user = await prisma.user.findUnique({ where: { id: userId } });
+  const user = await prisma.user.findUnique({ where: { user_id: userId } });
   if (!user) throw createError("ไม่พบผู้ใช้งาน", 404);
 
   const isMatch = await bcrypt.compare(currentPassword, user.password);
@@ -159,7 +180,7 @@ const changePassword = async ({ userId, currentPassword, newPassword }) => {
 
   const hashed = await bcrypt.hash(newPassword, 12);
   await prisma.user.update({
-    where: { id: userId },
+    where: { user_id: userId },
     data: { password: hashed },
   });
 
@@ -178,7 +199,7 @@ const resendOTP = async ({ email }) => {
   const otpData = createOTPData("VERIFY_EMAIL");
   await prisma.user.update({
     where: { email: normalizedEmail },
-    data: otpData,
+    data: { otpData },
   });
 
   await sendOTPEmail(normalizedEmail, otpData.otpCode, "VERIFY_EMAIL");

@@ -5,7 +5,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { Router, RouterModule } from '@angular/router';
 import { MaterialModule } from '../../../shared/material.module';
 import { AuthService } from '../../../core/services/auth.service';
-import Swal from 'sweetalert2'; // ✅ เพิ่ม SweetAlert2
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-login',
@@ -34,14 +34,13 @@ export class LoginComponent implements OnInit {
   }
 
   login(): void {
-    // ✅ ตรวจสอบ Form ก่อน
+
     if (this.form.invalid) {
-      // Mark all fields as touched to show validation errors
+
       Object.keys(this.form.controls).forEach((key) => {
         this.form.get(key)?.markAsTouched();
       });
 
-      // ✅ แสดงข้อความแจ้งเตือนเมื่อกรอกข้อมูลไม่ครบ
       const errors = this.getValidationErrors();
       Swal.fire({
         icon: 'warning',
