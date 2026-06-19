@@ -321,10 +321,9 @@ body {
 }
 
 .swal-um-confirm,
-.swal-um-cancel,
-button {
+.swal-um-cancel {
   &:hover {
-    background-color: #f3f4f6 !important; // กำหนดสีเทาอ่อนไปเลย
+    background-color: #f3f4f6 !important;
     color: var(--um-text-primary) !important;
   }
 }

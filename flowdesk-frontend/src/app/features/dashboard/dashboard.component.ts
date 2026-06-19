@@ -45,7 +45,7 @@ interface Activity {
   type: 'submitted' | 'approved' | 'rejected' | 'updated' | 'commented';
 }
 
-type UserRole = 'Admin' | 'Manager' | 'User';
+type UserRole = 'ADMIN' | 'MANAGER' | 'USER';
 
 @Component({
   selector: 'app-dashboard',
@@ -58,7 +58,7 @@ export class DashboardComponent implements OnInit {
   currentUser = {
     name: 'Nattapong',
     email: 'nattapong@gmail.com',
-    role: 'Admin' as UserRole,
+    role: 'ADMIN' as UserRole,
     avatar: 'N',
   };
 
@@ -90,7 +90,7 @@ export class DashboardComponent implements OnInit {
         (user.firstName ? `${user.firstName} ${user.lastName}` : null) ||
         user.email.split('@')[0];
       this.currentUser.email = user.email;
-      this.currentUser.role = (user.role as UserRole) || 'Admin';
+      this.currentUser.role = (user.role as UserRole) || 'ADMIN';
       this.currentUser.avatar = this.currentUser.name.charAt(0).toUpperCase();
     }
   }
@@ -300,8 +300,8 @@ export class DashboardComponent implements OnInit {
     ];
   }
 
-  isAdmin()   { return this.currentUser.role === 'Admin'; }
-  isManager() { return this.currentUser.role === 'Manager'; }
+  isAdmin()   { return this.currentUser.role === 'ADMIN'; }
+  isManager() { return this.currentUser.role === 'MANAGER'; }
   canApprove(){ return this.isAdmin() || this.isManager(); }
 
   // ─── Actions ─────────────────────────────────────────

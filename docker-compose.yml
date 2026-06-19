@@ -1,0 +1,130 @@
+services:
+
+  # ── 1. PostgreSQL Database ─────────────────────────
+  # ใช้ official image จาก Docker Hub โดยตรง ไม่ต้องสร้าง Dockerfile เอง
+  postgres:
+    image: postgres:16-alpine
+    container_name: flowdesk_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: flowdesk_db
+    volumes:
+      # Named volume: เก็บข้อมูล DB ไว้แม้จะ docker compose down
+      # ถ้าไม่มีบรรทัดนี้ ข้อมูลจะหายทุกครั้งที่ container ถูกลบ
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      # expose ออกมาให้เชื่อมจาก host ได้ (เช่น ใช้ DBeaver/pgAdmin)
+      # format: "host_port:container_port"
+      - "5433:5432"
+    networks:
+      - flowdesk_network
+    healthcheck:
+      # ตรวจสอบว่า DB พร้อมรับ connection แล้วก่อนให้ backend start
+      test: ["CMD-SHELL", "pg_isready -U postgres -d flowdesk_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── 2. RabbitMQ Message Broker ───────────────────────
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: flowdesk_rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"    # AMQP port (backend เชื่อมตรงนี้)
+      - "15672:15672"  # Management UI (http://localhost:15672)
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-admin}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-admin123}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - flowdesk_network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── 3. Backend (Node.js + Express) ────────────────
+  backend:
+    build:
+      context: ./flowdesk-backend
+      dockerfile: Dockerfile
+    container_name: flowdesk_backend
+    restart: unless-stopped
+    environment:
+      PORT: 3000
+      # ใช้ชื่อ service "postgres" แทน "localhost"
+      # เพราะใน Docker network ทุก container หากันด้วย service name
+      DATABASE_URL: postgresql://postgres:1234@postgres:5432/flowdesk_db?schema=public
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: 15m
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      JWT_REFRESH_EXPIRES_IN: 7d
+      RESEND_API_KEY: ${RESEND_API_KEY}
+      EMAIL_FROM: ${EMAIL_FROM}
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASS:-admin123}@rabbitmq:5672
+      FRONTEND_URL: http://localhost
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        # รอให้ postgres healthcheck ผ่านก่อน backend จะ start
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - flowdesk_network
+
+  # ── 4. Notification Worker (consume RabbitMQ) ────
+  # Container แยก ไม่ผูกกับ Express server
+  # ใช้ image เดียวกับ backend แต่รัน command คนละอย่าง
+  worker:
+    build:
+      context: ./flowdesk-backend
+      dockerfile: Dockerfile
+    container_name: flowdesk_worker
+    restart: unless-stopped
+    command: ["node", "src/services/notification.worker.js"]
+    environment:
+      DATABASE_URL: postgresql://postgres:1234@postgres:5432/flowdesk_db?schema=public
+      RESEND_API_KEY: ${RESEND_API_KEY}
+      EMAIL_FROM: ${EMAIL_FROM}
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASS:-admin123}@rabbitmq:5672
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - flowdesk_network
+
+  # ── 5. Frontend (Angular + Nginx) ─────────────────
+  frontend:
+    build:
+      context: ./flowdesk-frontend
+      dockerfile: Dockerfile
+    container_name: flowdesk_frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - flowdesk_network
+
+# ── Named Volumes ──────────────────────────────────
+# Docker จัดการเอง ข้อมูลอยู่รอดแม้ container จะถูกลบ
+volumes:
+  postgres_data:
+  rabbitmq_data:
+
+# ── Networks ───────────────────────────────────────
+# Network เดียวกันทำให้ container คุยกันได้ด้วยชื่อ service
+# เช่น backend เรียก postgres ได้เลยโดยไม่ต้องรู้ IP
+networks:
+  flowdesk_network:
+    driver: bridge

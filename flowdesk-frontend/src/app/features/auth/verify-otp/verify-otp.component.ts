@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { Router, RouterModule } from '@angular/router';
 import { MaterialModule } from '../../../shared/material.module';
 import { AuthService, ResendOTPResponse } from '../../../core/services/auth.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-verify-otp',
@@ -119,8 +120,17 @@ export class VerifyOtpComponent implements OnInit, OnDestroy {
       next: () => {
         this.isLoading = false;
         clearInterval(this.timer);
-        this.router.navigate(['/login'], {
-          state: { verified: true },
+
+        Swal.fire({
+          icon: 'success',
+          title: 'ยืนยัน OTP สำเร็จ',
+          text: 'ยืนยันอีเมลให้เสร็จเรียบร้อย กรุณาเข้าสู่ระบบอีกครั้ง',
+          confirmButtonText: 'OK',
+          confirmButtonColor: '#6366f1',
+        }).then(() => {
+          this.router.navigate(['/login'], {
+            state: { verified: true },
+          });
         });
       },
       error: (error) => {

@@ -176,6 +176,28 @@ $shadow-btn-hover:
       margin-right: 0.75rem;
     }
 
+    // ── ปุ่ม toggle แสดง/ซ่อนรหัสผ่าน — แก้ ripple วงกลมเกินออกมาตอน hover ───
+    .mat-mdc-form-field-icon-suffix button.mat-mdc-icon-button {
+      width: 2.25rem !important;
+      height: 2.25rem !important;
+      padding: 0 !important;
+
+      // ปิด touch target / state-layer ของ Material ที่เกินขนาดจรง
+      .mat-mdc-button-touch-target {
+        width: 2.25rem !important;
+        height: 2.25rem !important;
+      }
+
+      .mat-mdc-button-persistent-ripple,
+      .mat-ripple {
+        border-radius: 50%;
+      }
+
+      .mdc-icon-button__ripple {
+        border-radius: 50%;
+      }
+    }
+
     .mat-mdc-form-field-icon-prefix {
       padding-right: 0.5rem;
     }

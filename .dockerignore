@@ -1,0 +1,13 @@
+# ── Backend ───────────────────────
+# ไม่เอา node_modules และ build artifacts เข้า Docker image
+flowdesk-backend/node_modules
+flowdesk-backend/dist
+flowdesk-backend/.env
+
+# ── Frontend ──────────────────────
+flowdesk-frontend/node_modules
+flowdesk-frontend/dist
+flowdesk-frontend/.angular
+
+# ── Root ──────────────────────────
+.env

@@ -11,6 +11,19 @@ enum OtpPurpose {
   FORGOT_PASSWORD
 }
 
+enum Role {
+  ADMIN
+  MANAGER
+  USER
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
 model User {
   user_id String @id @default(uuid()) @db.Uuid
 
@@ -19,12 +32,81 @@ model User {
   email        String      @unique
   password     String
   isVerified   Boolean     @default(false) @map("is_verified")
+  role         Role        @default(USER)
   otpCode      String?     @map("otp_code") @db.VarChar(6)
   otpExpires   DateTime?   @map("otp_expires")
   otpPurpose   OtpPurpose? @map("otp_purpose")
-  refreshToken String?     @map("refresh_token") @db.VarChar(500)
   createdAt    DateTime    @default(now()) @map("created_at")
   updatedAt    DateTime    @updatedAt @map("updated_at")
 
+  requests      Request[]      @relation("RequestedBy")
+  approvals     Request[]      @relation("ApprovedBy")
+  refreshTokens RefreshToken[]
+
+  notifications NotificationHistory[]
+  announcements Announcement[]
+
   @@map("users")
+}
+
+model Announcement {
+  id        String   @id @default(uuid()) @db.Uuid
+  title     String   @db.VarChar(200)
+  message   String
+
+  createdBy String   @db.Uuid
+  creator   User     @relation(fields: [createdBy], references: [user_id])
+
+  recipientCount Int  @default(0) @map("recipient_count") // ส่งไปกี่คนตอนประกาศ
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("announcements")
+}
+
+model NotificationHistory {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  user      User     @relation(fields: [userId], references: [user_id], onDelete: Cascade)
+  requestId String?  @db.Uuid  // null ได้—สำหรับ announcement ไม่มี request เกี่ยวข้อง
+  type      String   @db.VarChar(20) // "APPROVED" | "REJECTED" | "ANNOUNCEMENT"
+  message   String
+  channel   String   @default("EMAIL") @db.VarChar(20)
+  status    String   @db.VarChar(10)
+  sentAt    DateTime @default(now()) @map("sent_at")
+
+  @@map("notification_histories")
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  tokenHash String    @unique
+  userId    String    @db.Uuid
+  user      User      @relation(fields: [userId], references: [user_id], onDelete: Cascade)
+  expiresAt DateTime
+  revokedAt DateTime? @map("revoked_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  @@map("refresh_tokens")
+}
+
+model Request {
+  id          String        @id @default(uuid()) @db.Uuid
+  title       String        @db.VarChar(200)
+  description String?
+  type        String        @db.VarChar(100)
+  status      RequestStatus @default(PENDING)
+  note        String?       // หมายเหตุจาก approver ตอน approve/reject
+
+  requesterId String @db.Uuid
+  requester   User   @relation("RequestedBy", fields: [requesterId], references: [user_id])
+
+  approverId  String? @db.Uuid
+  approver    User?   @relation("ApprovedBy", fields: [approverId], references: [user_id])
+
+  approvedAt  DateTime? @map("approved_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@map("requests")
 }

@@ -4,10 +4,6 @@ import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
-// ── Types ───────────────────────────────────────────
-
-// ── Types ───────────────────────────────────────────
-
 export interface AuthUser {
   id: string;
   email: string;
@@ -17,12 +13,14 @@ export interface AuthUser {
 }
 
 export interface AuthResponse {
-  token: string;
+  accessToken: string;
+  refreshToken: string;
   user: {
     id: string;
     email: string;
     firstName?: string;
     lastName?: string;
+    role: 'ADMIN' | 'MANAGER' | 'USER';
   };
 }
 
@@ -78,7 +76,8 @@ export interface VerifyForgotOTPResponse {
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly apiUrl = `${environment.apiUrl}/auth`;
-  private readonly TOKEN_KEY = 'token';
+  private readonly TOKEN_KEY = 'accessToken';
+  private readonly REFRESH_TOKEN_KEY = 'refreshToken';
   private readonly USER_KEY = 'user';
 
   constructor(private http: HttpClient) {}
@@ -130,11 +129,42 @@ export class AuthService {
     return this.http.post<VerifyForgotOTPResponse>(`${this.apiUrl}/verify-forgot-otp`, data);
   }
   
+  // ── Token Refresh & Logout ─────────────────────────
+
+  refreshAccessToken(): Observable<{ success: boolean; accessToken: string }> {
+    const refreshToken = this.getRefreshToken();
+    return this.http
+      .post<{ success: boolean; accessToken: string }>(
+        `${this.apiUrl}/refresh-token`,
+        { refreshToken }
+      )
+      .pipe(tap((res) => localStorage.setItem(this.TOKEN_KEY, res.accessToken)));
+  }
+
+  logoutFromServer(): Observable<{ success: boolean; message: string }> {
+    const refreshToken = this.getRefreshToken();
+    return this.http.post<{ success: boolean; message: string }>(
+      `${this.apiUrl}/logout`,
+      { refreshToken }  // ส่ง token ของเครื่องนี้ไปด้วย เพื่อ revoke เฉพาะ device นี้
+    );
+  }
+
+  logoutAllDevices(): Observable<{ success: boolean; message: string }> {
+    return this.http.post<{ success: boolean; message: string }>(
+      `${this.apiUrl}/logout-all`,
+      {}
+    );
+  }
+
   // ── Storage Management ────────────────────────────
 
   private storeAuth(res: AuthResponse): void {
-    if (res?.token) {
-      localStorage.setItem(this.TOKEN_KEY, res.token);
+    if (res?.accessToken) {
+      localStorage.setItem(this.TOKEN_KEY, res.accessToken);
+    }
+
+    if (res?.refreshToken) {
+      localStorage.setItem(this.REFRESH_TOKEN_KEY, res.refreshToken);
     }
 
     if (res?.user) {
@@ -155,8 +185,13 @@ export class AuthService {
     return !!this.getToken();
   }
 
+  getRefreshToken(): string | null {
+    return localStorage.getItem(this.REFRESH_TOKEN_KEY);
+  }
+
   logout(): void {
     localStorage.removeItem(this.TOKEN_KEY);
+    localStorage.removeItem(this.REFRESH_TOKEN_KEY);
     localStorage.removeItem(this.USER_KEY);
   }
 }

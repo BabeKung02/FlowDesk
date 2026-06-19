@@ -34,12 +34,14 @@ $shadow-button-hover: 0 20px 25px -5px rgba(102,126,234,0.5), 0 10px 10px -5px r
 // ── Layout ────────────────────────────────────────────
 .verify-container {
   min-height: 100vh;
+  max-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   background: $gradient;
-  padding: 1rem;
+  padding: 0.75rem;
   position: relative;
+  overflow: hidden;
 
   &::before {
     content: '';
@@ -55,7 +57,7 @@ $shadow-button-hover: 0 20px 25px -5px rgba(102,126,234,0.5), 0 10px 10px -5px r
 // ── Card ──────────────────────────────────────────────
 .verify-card {
   width: 100%;
-  max-width: 22rem;
+  max-width: 24rem;
   border-radius: $radius-card;
   overflow: hidden;
   border: none;
@@ -69,7 +71,7 @@ $shadow-button-hover: 0 20px 25px -5px rgba(102,126,234,0.5), 0 10px 10px -5px r
 // ── Header ────────────────────────────────────────────
 .header {
   background: $gradient;
-  padding: 1.75rem 2rem 1.5rem; // ← ลดจาก 2.5rem
+  padding: 1rem 1.5rem 0.75rem;
   text-align: center;
   position: relative;
   overflow: hidden;
@@ -85,11 +87,11 @@ $shadow-button-hover: 0 20px 25px -5px rgba(102,126,234,0.5), 0 10px 10px -5px r
   }
 
   .icon-container {
-    width: 3.5rem;          // ← ลดจาก 4rem
-    height: 3.5rem;
+    width: 2.5rem;
+    height: 2.5rem;
     background: rgba(255,255,255,0.95);
     border-radius: 50%;
-    margin: 0 auto 1rem;    // ← ลดจาก 1.25rem
+    margin: 0 auto 0.4rem;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -98,18 +100,18 @@ $shadow-button-hover: 0 20px 25px -5px rgba(102,126,234,0.5), 0 10px 10px -5px r
     z-index: 1;
 
     mat-icon {
-      font-size: 1.75rem;
-      width: 1.75rem;
-      height: 1.75rem;
+      font-size: 1.25rem;
+      width: 1.25rem;
+      height: 1.25rem;
       color: $primary;
     }
   }
 
   .title {
-    font-size: 1.5rem;      // ← ลดจาก 1.75rem
+    font-size: 1.1rem;
     font-weight: 700;
     color: $white;
-    margin: 0 0 0.4rem;
+    margin: 0 0 0.2rem;
     position: relative;
     z-index: 1;
     text-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -117,9 +119,9 @@ $shadow-button-hover: 0 20px 25px -5px rgba(102,126,234,0.5), 0 10px 10px -5px r
 
   .subtitle {
     color: rgba(255,255,255,0.85);
-    font-size: 0.9rem;
-    line-height: 1.4;
-    margin: 0 0 0.25rem;
+    font-size: 0.75rem;
+    line-height: 1.2;
+    margin: 0 0 0.15rem;
     position: relative;
     z-index: 1;
   }
@@ -127,7 +129,7 @@ $shadow-button-hover: 0 20px 25px -5px rgba(102,126,234,0.5), 0 10px 10px -5px r
   // ← อีเมลแยกออกมาให้เด่น
   .email-display {
     color: $white;
-    font-size: 1rem;
+    font-size: 0.85rem;
     font-weight: 600;
     margin: 0;
     position: relative;
@@ -135,21 +137,21 @@ $shadow-button-hover: 0 20px 25px -5px rgba(102,126,234,0.5), 0 10px 10px -5px r
     word-break: break-all;
     background: rgba(255,255,255,0.15);
     border-radius: 0.5rem;
-    padding: 0.35rem 0.75rem;
+    padding: 0.2rem 0.5rem;
     display: inline-block;
-    margin-top: 0.25rem;
+    margin-top: 0.15rem;
   }
 }
 
 // ── Form ──────────────────────────────────────────────
 .form-container {
-  padding: 1.75rem 2rem 2rem; // ← ลดบนจาก 2rem
+  padding: 1rem 1.5rem 1.25rem;
 }
 
 .otp-form {
   display: flex;
   flex-direction: column;
-  gap: 1rem;                // ← ลดจาก 1.25rem
+  gap: 0.6rem;
 
   ::ng-deep .mat-mdc-form-field {
     width: 100%;
@@ -160,17 +162,17 @@ $shadow-button-hover: 0 20px 25px -5px rgba(102,126,234,0.5), 0 10px 10px -5px r
     }
 
     .mat-mdc-input-element {
-      font-size: 1.75rem;
+      font-size: 1.5rem;
       font-weight: 700;
-      letter-spacing: 0.75rem;
+      letter-spacing: 0.6rem;
       text-align: center;
       color: $gray-700;
 
       &::placeholder {
         color: $gray-400;
-        font-size: 1.25rem;
+        font-size: 1.1rem;
         font-weight: 400;
-        letter-spacing: 0.5rem;
+        letter-spacing: 0.4rem;
       }
     }
 
@@ -244,10 +246,10 @@ $shadow-button-hover: 0 20px 25px -5px rgba(102,126,234,0.5), 0 10px 10px -5px r
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.65rem 1rem;
+  padding: 0.5rem 1rem;
   border-radius: $radius-field;
   background: rgba(99, 102, 241, 0.08);
-  font-size: 1rem;          // ← เพิ่มจาก 0.9rem
+  font-size: 0.9rem;
   font-weight: 600;
   color: $primary;
   transition: all 0.3s ease;
@@ -265,12 +267,12 @@ $shadow-button-hover: 0 20px 25px -5px rgba(102,126,234,0.5), 0 10px 10px -5px r
   display: flex;
   align-items: flex-start;
   gap: 0.5rem;
-  padding: 0.875rem 1rem;
+  padding: 0.65rem 0.85rem;
   background-color: #fee2e2;
   border-left: 4px solid $error;
   border-radius: 0 0.5rem 0.5rem 0;
   color: $error;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 500;
 
   mat-icon { font-size: 1.25rem; width: 1.25rem; height: 1.25rem; flex-shrink: 0; }
@@ -281,8 +283,8 @@ $shadow-button-hover: 0 20px 25px -5px rgba(102,126,234,0.5), 0 10px 10px -5px r
 // ── Submit Button ─────────────────────────────────────
 .submit-button {
   width: 100%;
-  height: 3rem;             // ← เพิ่มจาก 2.75rem
-  font-size: 1.05rem;       // ← เพิ่มจาก 0.95rem
+  height: 2.75rem;
+  font-size: 1rem;
   font-weight: 600;
   color: $white !important;
   border: none;
@@ -313,7 +315,7 @@ $shadow-button-hover: 0 20px 25px -5px rgba(102,126,234,0.5), 0 10px 10px -5px r
     font-weight: 600;
     cursor: pointer;
     padding: 0;
-    font-size: 1rem;          // ← เพิ่มจาก 0.9rem
+    font-size: 0.9rem;
     transition: color 0.2s;
     text-decoration: underline;
     text-underline-offset: 3px;
@@ -332,7 +334,7 @@ $shadow-button-hover: 0 20px 25px -5px rgba(102,126,234,0.5), 0 10px 10px -5px r
     align-items: center;
     gap: 0.35rem;
     color: $gray-600;
-    font-size: 1rem;          // ← เพิ่มจาก 0.875rem
+    font-size: 0.9rem;
     text-decoration: none;
     font-weight: 500;
     transition: color 0.2s;
@@ -355,14 +357,14 @@ $shadow-button-hover: 0 20px 25px -5px rgba(102,126,234,0.5), 0 10px 10px -5px r
   .verify-container { padding: 0.5rem; }
 
   .header {
-    padding: 1.5rem 1.5rem 1.25rem;
-    .title { font-size: 1.35rem; }
+    padding: 0.85rem 1rem 0.6rem;
+    .title { font-size: 1rem; }
   }
 
-  .form-container { padding: 1.5rem; }
+  .form-container { padding: 0.85rem 1rem 1rem; }
 
   .otp-form ::ng-deep .mat-mdc-form-field .mat-mdc-input-element {
-    font-size: 1.5rem;
-    letter-spacing: 0.5rem;
+    font-size: 1.3rem;
+    letter-spacing: 0.4rem;
   }
 }
